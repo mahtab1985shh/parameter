@@ -1,0 +1,12 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom');
+const code=fs.readFileSync(path.join(__dirname,'column-tools.js'),'utf8');
+const fixture='<!doctype html><html lang="fa" dir="rtl"><body><table><thead><tr><th>نام<span class="th-tools"><button class="th-sort-btn">↕</button></span></th><th>اسناد مرتبط</th><th>کاربران مرتبط</th><th>عملیات</th></tr></thead><tbody><tr id="a"><td>ب</td><td><span class="count">۱۰</span></td><td><button title="رضا">رضا</button></td><td><button>ویرایش</button></td></tr><tr id="b"><td>الف</td><td><span class="count">۲</span></td><td><button title="مریم">مریم</button></td><td><button>ویرایش</button></td></tr></tbody><tbody><tr id="group"><td colspan="4">گروه دوم</td></tr><tr id="c"><td>ج</td><td>۳</td><td>حسین</td><td></td></tr></tbody></table></body></html>';
+const dom=new JSDOM(fixture,{runScripts:'outside-only'});dom.window.eval(code);const d=dom.window.document;
+const heads=d.querySelectorAll('th');assert.equal(d.querySelectorAll('.pmc-trigger').length,3);assert.equal(d.querySelectorAll('.pmc-sort-toggle').length,0);assert.equal(heads[3].querySelector('.pmc-trigger'),null);
+heads[1].querySelector('.pmc-trigger').click();d.querySelector('.pmc-order').click();assert.equal(d.querySelector('tbody').rows[0].id,'b');assert.equal(d.querySelectorAll('tbody')[1].rows[0].id,'group');
+heads[1].querySelector('.pmc-trigger').click();d.querySelectorAll('.pmc-order')[1].click();assert.equal(d.querySelector('tbody').rows[0].id,'a');
+heads[2].querySelector('.pmc-trigger').click();const input=d.querySelector('.pmc-popover input');input.value='مریم';input.dispatchEvent(new dom.window.Event('input'));assert.equal(d.getElementById('a').style.display,'none');assert.equal(d.getElementById('b').style.display,'');d.querySelector('.pmc-clear').click();assert.equal(d.getElementById('a').style.display,'');
+// Repair menus if a legacy renderer replaces the heading text.
+heads[1].textContent='اسناد مرتبط';
+setTimeout(()=>{assert.equal(heads[1].querySelectorAll('.pmc-trigger').length,1);assert.equal(d.querySelectorAll('.pmc-trigger').length,3);dom.window.close();console.log('PASS: one menu per data column, documents numeric sort, users filter, clear, group preservation, dynamic header repair');},180);
+if(process.argv[2])fs.writeFileSync(process.argv[2],fixture.replace('</body>','<script>'+code+'</script></body>'));
