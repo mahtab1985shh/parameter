@@ -8,18 +8,35 @@ function pcPortfolioExtras(){
 function setupPortfolioExtras(host){
   var root=host.querySelector('.pf-extra');if(!root||root.dataset.ready)return;root.dataset.ready='true';
   var english=typeof currentLang!=='undefined'&&currentLang==='en',toggle=root.querySelector('.pf-multi-toggle'),options=root.querySelector('.pf-options'),chips=root.querySelector('.pf-chips');
+  var previous=document.querySelector('.pf-options[data-portal]');if(previous&&previous!==options)previous.remove();
+  options.dataset.portal='true';document.body.appendChild(options);
+  function position(){if(options.hidden)return;var rect=toggle.getBoundingClientRect(),width=Math.min(rect.width,window.innerWidth-16);options.style.width=width+'px';options.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-width-8))+'px';var below=window.innerHeight-rect.bottom-8,above=rect.top-8,up=below<160&&above>below;options.style.maxHeight=Math.max(60,Math.min(210,up?above-5:below-5))+'px';options.style.top=(up?Math.max(8,rect.top-options.offsetHeight-5):rect.bottom+5)+'px'}
   function close(){options.hidden=true;toggle.setAttribute('aria-expanded','false')}
-  toggle.onclick=function(){options.hidden=!options.hidden;toggle.setAttribute('aria-expanded',String(!options.hidden))};
+  toggle.onclick=function(){options.hidden=!options.hidden;toggle.setAttribute('aria-expanded',String(!options.hidden));position()};
+  options.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();close();toggle.focus()}});
   root.addEventListener('keydown',function(e){if(e.key==='Escape'&&!options.hidden){e.preventDefault();close();toggle.focus()}});
   // Close within the form when focus or pointer moves outside this dropdown, without a modal overlay.
   if(host._pfOutside)document.removeEventListener('pointerdown',host._pfOutside);
-  host._pfOutside=function(e){if(!root.isConnected){document.removeEventListener('pointerdown',host._pfOutside);return}if(!root.querySelector('.pf-multi').contains(e.target))close()};
+  host._pfOutside=function(e){if(!root.isConnected){options.remove();document.removeEventListener('pointerdown',host._pfOutside);return}if(!root.querySelector('.pf-multi').contains(e.target)&&!options.contains(e.target))close()};
   document.addEventListener('pointerdown',host._pfOutside);
-  root.querySelector('.pf-multi').addEventListener('focusout',function(e){if(e.relatedTarget&&!this.contains(e.relatedTarget))close()});
+  root.querySelector('.pf-multi').addEventListener('focusout',function(e){if(e.relatedTarget&&!this.contains(e.relatedTarget)&&!options.contains(e.relatedTarget))close()});
+  options.addEventListener('focusout',function(e){if(e.relatedTarget&&!options.contains(e.relatedTarget)&&!root.querySelector('.pf-multi').contains(e.relatedTarget))close()});
+  if(host._pfScroll)document.removeEventListener('scroll',host._pfScroll,true);
+  if(host._pfResize)window.removeEventListener('resize',host._pfResize);
+  host._pfScroll=function(e){if(!root.isConnected){close();return}if(!options.contains(e.target))position()};host._pfResize=position;
+  document.addEventListener('scroll',host._pfScroll,true);window.addEventListener('resize',host._pfResize);
   function sync(){chips.textContent='';var selected=Array.from(options.querySelectorAll('input:checked'));root.querySelector('#pf-areas-summary').textContent=selected.length?(english?selected.length+' selected':selected.length.toLocaleString('fa-IR')+' گزینه انتخاب شده'):(english?'Select one or more options':'یک یا چند گزینه انتخاب کنید');selected.forEach(function(input){var name=input.nextElementSibling.textContent,chip=document.createElement('span');chip.className='pf-chip';var title=document.createElement('span');title.textContent=name;var remove=document.createElement('button');remove.type='button';remove.textContent='×';remove.setAttribute('aria-label',(english?'Remove ':'حذف ')+name);remove.onclick=function(){input.checked=false;input.dispatchEvent(new Event('change',{bubbles:true}));toggle.focus()};chip.append(title,remove);chips.appendChild(chip)})}
   options.addEventListener('change',sync);
   function digits(v){return v.replace(/[۰-۹]/g,function(c){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(c)}).replace(/[٠-٩]/g,function(c){return '٠١٢٣٤٥٦٧٨٩'.indexOf(c)})}
   function validate(){var any=false,valid=true,total=[];['from','to'].forEach(function(kind){var fields=Array.from(root.querySelectorAll('[data-time="'+kind+'"]')),values=fields.map(function(f){return digits(f.value.trim())});if(values.some(Boolean))any=true;fields.forEach(function(f,i){var v=values[i],bad=!!v&&(!/^\d{1,2}$/.test(v)||+v>(i===0?23:59));f.setCustomValidity(bad?(english?'Enter a valid time':'ساعت یا دقیقه معتبر وارد کنید'):'');f.setAttribute('aria-invalid',String(bad));if(bad)valid=false});var complete=values.every(function(v){return /^\d{1,2}$/.test(v)});total.push(complete?+values[0]*60+(+values[1]):null);root.querySelector('[name="'+kind+'Time"]').value=complete&&valid?values.map(function(v){return v.padStart(2,'0')}).join(':'):''});var message='';if(!valid)message=english?'Hours: 00–23; minutes: 00–59.':'ساعت باید بین ۰۰ تا ۲۳ و دقیقه بین ۰۰ تا ۵۹ باشد.';else if(any&&total.some(function(v){return v===null})){valid=false;message=english?'Complete both start and end times.':'ساعت و دقیقهٔ شروع و پایان را کامل کنید.'}else if(any&&total[1]<total[0])message=english?'End time is on the following day.':'زمان پایان مربوط به روز بعد است.';root.querySelector('.pf-time-message').textContent=message;root.querySelector('.pf-time-message').classList.toggle('pf-error',!valid);return valid}
-  root.querySelectorAll('[data-time]').forEach(function(f){f.addEventListener('input',validate);f.addEventListener('blur',function(){var v=digits(f.value.trim());if(/^\d{1,2}$/.test(v)&&+v<=(f.dataset.part==='hour'?23:59))f.value=v.padStart(2,'0');validate()})});
+  root.querySelectorAll('[data-time]').forEach(function(f){
+    var last='',limit=f.dataset.part==='hour'?23:59;
+    f.dir='ltr';f.setAttribute('pattern',f.dataset.part==='hour'?'([01]?[0-9]|2[0-3])':'[0-5]?[0-9]');
+    function allowed(v){return v===''||(/^\d{1,2}$/.test(v)&&+v<=limit)}
+    f.addEventListener('beforeinput',function(e){if(e.inputType&&e.inputType.indexOf('insert')===0&&e.data!==null){var proposed=digits(f.value.slice(0,f.selectionStart)+e.data+f.value.slice(f.selectionEnd));if(!allowed(proposed))e.preventDefault()}});
+    f.addEventListener('paste',function(e){var text=digits(e.clipboardData.getData('text')),proposed=digits(f.value.slice(0,f.selectionStart)+text+f.value.slice(f.selectionEnd));e.preventDefault();if(allowed(proposed)){f.value=proposed;last=proposed;validate()}});
+    f.addEventListener('input',function(){var v=digits(f.value);if(allowed(v)){f.value=v;last=v}else f.value=last;validate()});
+    f.addEventListener('blur',function(){var v=digits(f.value);if(v&&allowed(v)){f.value=v.padStart(2,'0');last=f.value}validate()});
+  });
   var submit=host.querySelector('.pc-submit');if(submit)submit.addEventListener('click',function(e){if(!validate()){e.preventDefault();e.stopImmediatePropagation();root.querySelector('[aria-invalid="true"],[data-time]').focus()}},true);
 }
