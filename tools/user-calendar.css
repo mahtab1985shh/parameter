@@ -9,7 +9,9 @@
 .uc-root .parameter-tab-icon{display:inline-grid;place-items:center;flex:0 0 18px;width:18px;height:18px;border-radius:4px;background:#e8f2ff;color:var(--uc-blue)}
 .uc-root .parameter-tab-icon svg{width:12px;height:12px}
 .uc-root .uc-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;min-height:38px}
-.uc-root .uc-view-switch{grid-column:1;justify-self:start;gap:8px}
+.uc-root .uc-view-switch{grid-column:1;justify-self:start;gap:14px}
+.uc-root .uc-view-switch .uc-subtab{height:34px;padding:0 5px;display:inline-flex;align-items:center;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;background:transparent!important;color:var(--text-muted,#667085);font-family:inherit;font-size:11px;font-weight:700;box-shadow:none!important;cursor:pointer}
+.uc-root .uc-view-switch .uc-subtab.active{color:var(--uc-blue);border-bottom-color:var(--uc-blue)!important;background:transparent!important}
 .uc-root .uc-month-nav{grid-column:2;justify-self:center;gap:8px}
 .uc-root .uc-month-nav strong{color:var(--text,#344054)}
 @media(max-width:700px){.uc-root .uc-toolbar{grid-template-columns:1fr;gap:4px}.uc-root .uc-view-switch{grid-column:1;grid-row:1}.uc-root .uc-month-nav{grid-column:1;grid-row:2;justify-self:center}.uc-root .uc-tabs{gap:6px}}
