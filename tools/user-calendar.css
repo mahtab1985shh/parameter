@@ -15,3 +15,4 @@
 .uc-root .uc-month-nav{grid-column:2;justify-self:center;gap:8px}
 .uc-root .uc-month-nav strong{color:var(--text,#344054)}
 @media(max-width:700px){.uc-root .uc-toolbar{grid-template-columns:1fr;gap:4px}.uc-root .uc-view-switch{grid-column:1;grid-row:1}.uc-root .uc-month-nav{grid-column:1;grid-row:2;justify-self:center}.uc-root .uc-tabs{gap:6px}}
+.uc-root .uc-events .parameter-tab-icon{background:#e8f2ff;color:#087bf0}.uc-root .uc-reminders .parameter-tab-icon{background:#fff3df;color:#e58912}.uc-root .uc-events.active .parameter-tab-icon{background:#087bf0;color:#fff}.uc-root .uc-reminders.active .parameter-tab-icon{background:#e58912;color:#fff}
