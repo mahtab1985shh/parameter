@@ -34,6 +34,4 @@
         '<div class="dd-status-item"><b>نظارت</b><strong>۲۸۸</strong><span>میلیارد ریال · ۲ فعال</span><div class="dd-status-track"><i style="width:58%"></i></div></div>'+
       '</div></section></div>';
   };
-  /* The legacy shell renders the dashboard before late feature modules load. */
-  setTimeout(function(){if(typeof window.renderDashboard==='function')window.renderDashboard()},0);
 })();
