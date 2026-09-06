@@ -9,4 +9,28 @@
 @media(max-width:700px){.ew-dialog{width:100vw}}
 @media(prefers-reduced-motion:reduce){.ew-dialog[open]{animation:none}}
 
-.ew-flow-scroll{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-color:#b6c8de transparent;scrollbar-width:thin;padding:0 8px 10px}.ew-flow-scroll:focus-visible{outline:2px solid #0073ea;outline-offset:2px}.ew-flow{grid-template-columns:repeat(10,minmax(180px,1fr));min-width:1800px}.ew-flow-scroll::-webkit-scrollbar{height:6px}.ew-flow-scroll::-webkit-scrollbar-thumb{background:#b6c8de;border-radius:9px}@media(max-width:700px){.ew-flow-scroll{overflow-x:visible;padding:0}.ew-flow{grid-template-columns:1fr;min-width:0}}
+/* Compact vertical workflow: one connected person per row, no horizontal track. */
+.ew-flow-scroll{overflow:visible;padding:0}
+.ew-flow{display:flex;flex-direction:column;gap:0;min-width:0;width:100%;max-width:860px;margin:0 auto;padding:12px 0 16px}
+.ew-flow .ew-step{display:grid;grid-template-columns:64px minmax(120px,1fr) minmax(120px,1fr) minmax(110px,.8fr);grid-template-rows:auto auto;column-gap:18px;align-content:center;align-items:center;text-align:right;min-height:66px;padding:8px 12px;position:relative}
+.ew-flow .ew-avatar{grid-column:1;grid-row:1/3;width:42px;height:42px;margin:0 auto;border-width:1px}
+.ew-flow .ew-avatar>svg{width:24px;height:24px}
+.ew-flow .ew-number{width:18px;height:18px;font-size:8px;bottom:-4px;right:-4px;border-width:2px}
+.ew-flow .ew-step strong{grid-column:2;grid-row:1;font-size:12px;margin:0 0 3px}
+.ew-flow .ew-step>span{grid-column:2;grid-row:2;font-size:10px;margin:0}
+.ew-flow .ew-step>small{grid-column:3;grid-row:1/3;font-size:10px;margin:0;overflow-wrap:anywhere}
+.ew-flow .ew-stage{grid-column:4;grid-row:1/3;font-size:10px;margin:0}
+.ew-flow .ew-owner-label{display:none;height:auto}
+.ew-flow .ew-step.current{background:#edf5ff;border-radius:12px}
+.ew-flow .ew-step.current .ew-owner-label{display:block;grid-column:4;grid-row:1;font-size:10px;margin-bottom:3px}
+.ew-flow .ew-step.current .ew-stage{grid-row:2}
+.ew-flow .ew-step.current .ew-avatar{transform:none;border-width:2px;box-shadow:0 0 0 4px #dfedff}
+.ew-flow .ew-document{width:20px;height:23px;border-radius:4px;left:-9px;bottom:-2px}
+.ew-flow .ew-document svg{width:15px;height:15px}
+.ew-flow .ew-step:not(:last-child):after{top:54px;bottom:-12px;right:43px;left:auto;width:2px;height:auto;background:#e2e7ef;z-index:0}
+.ew-flow .ew-step:not(:last-child):before{top:auto;bottom:-7px;right:40px;left:auto;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #c8d0dc;border-bottom:0;z-index:1}
+.ew-flow .ew-step.done:after{background:#69c5ae}
+.ew-flow .ew-step.done:before{border-top-color:#69c5ae}
+.ew-flow-meta{padding-top:14px}
+html[data-theme=dark] .ew-flow .ew-step.current{background:#153659}
+@media(max-width:700px){.ew-flow .ew-step{grid-template-columns:52px minmax(0,1fr) minmax(80px,.7fr);column-gap:10px;min-height:84px;padding:10px 4px}.ew-flow .ew-avatar{grid-row:1/4}.ew-flow .ew-step>small{grid-column:2;grid-row:3;margin-top:3px}.ew-flow .ew-stage,.ew-flow .ew-step.current .ew-owner-label{grid-column:3}.ew-flow .ew-stage{grid-row:1/4}.ew-flow .ew-step.current .ew-stage{grid-row:2/4}.ew-flow .ew-step:not(:last-child):after{right:29px;top:63px;bottom:-22px}.ew-flow .ew-step:not(:last-child):before{right:26px;bottom:-7px}}
