@@ -8,4 +8,9 @@ w.setDashboardMode('custom');assert.equal(calls,1);assert.equal(w.document.query
 const h=fs.readFileSync(__dirname+'/../parameter-v34-login-sharp.html','utf8'),p=Buffer.from(h.match(/var binary=atob\("([^"]+)"\)/)[1],'base64').toString();const outer=new JSDOM(p);const inner=new JSDOM(JSON.parse(outer.window.document.querySelector('script[type="__bundler/template"]').textContent));
 const script=[...inner.window.document.scripts].find(s=>s.textContent.includes('window.PARAMETER_REFERENCE_DOCUMENT='));assert.ok(script);
 const assignment=script.textContent.match(/window.PARAMETER_REFERENCE_DOCUMENT=(.*);\n\(function\(\)/);assert.ok(assignment);const ref=JSON.parse(assignment[1].replace(/<\\\//g,'</'));assert.ok(ref.includes('/* INITIAL_REFERENCE_TAB */'));const rd=new JSDOM(ref);assert.equal(rd.window.document.querySelectorAll('script[src]').length,0);rd.window.document.querySelectorAll('script').forEach(s=>new vm.Script(s.textContent));assert.ok(rd.window.document.getElementById('panelDefault'));assert.ok(rd.window.document.getElementById('panelProject'));
-console.log('PASS: two new tabs, selected state, project initialization, previous modes, embedded Chart.js and script syntax');[d,outer,inner,rd].forEach(x=>x.window.close());
+assert.ok(ref.includes('ParameterProjectCharts.options'));
+assert.ok(!ref.includes('new Chart('));
+const dashboard=inner.window.document.getElementById('view-dashboard');
+dashboard.style.display='block';assert.ok(inner.window.document.querySelector('.main-wrap:has(#view-dashboard[style*="block"])>.page-head'));
+dashboard.style.display='none';assert.equal(inner.window.document.querySelector('.main-wrap:has(#view-dashboard[style*="block"])>.page-head'),null);
+console.log('PASS: two tabs, selected state, project initialization, previous modes, bundled Highcharts, header visibility selector, script syntax');[d,outer,inner,rd].forEach(x=>x.window.close());
