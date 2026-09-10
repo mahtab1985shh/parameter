@@ -34,6 +34,24 @@
     if(key==='cpi'||key==='spi'){
       const value=d[key];o.chart.height=170;o.pane={startAngle:-90,endAngle:90,center:['50%','72%'],size:'110%',background:[{backgroundColor:'transparent',borderWidth:0}]};o.xAxis={visible:false};o.yAxis={min:0,max:Math.max(2,value||0),title:{text:undefined},tickPositions:[0,1,2],minorTickInterval:undefined,gridLineWidth:0,lineWidth:0,tickLength:8,labels:{distance:16},plotBands:[{from:0,to:.9,color:'#d03b3b',thickness:12},{from:.9,to:1,color:'#d98c00',thickness:12},{from:1,to:Math.max(2,value||0),color:'#0ca30c',thickness:12}]};o.legend.enabled=false;o.tooltip.shared=false;o.tooltip.valueDecimals=4;o.series=[{type:'gauge',name:key.toUpperCase(),data:[value],dial:{radius:'75%',backgroundColor:theme.text||'#323338'},pivot:{backgroundColor:theme.text||'#323338'},dataLabels:{format:'{y:.4f}',borderWidth:0,style:{fontSize:'16px',color:theme.text||'#323338'}}}];
     }
+    // Visible design: compact dashboard gauges, labelled bars and a clear plan/actual comparison.
+    o.legend.align='right';o.legend.symbolRadius=3;o.legend.symbolHeight=8;o.legend.symbolWidth=14;
+    o.yAxis.gridLineDashStyle='Dash';
+    if(key==='scurve'){
+      o.series[0].dashStyle='ShortDash';o.series[0].lineWidth=2;o.series[0].fillOpacity=.025;
+      o.series[1].lineWidth=2;o.series[2].lineWidth=3;o.series[2].marker={enabled:true,radius:3,symbol:'circle'};
+      o.yAxis.tickInterval=25;o.xAxis.tickInterval=Math.max(1,Math.ceil(d.scurve.labels.length/8));
+    }
+    if(key==='financial'||key==='hr'||key==='equip'){
+      o.plotOptions.series.dataLabels={enabled:true,format:'{point.y:,.0f}',style:{fontSize:'10px',fontWeight:'500',textOutline:'none',color:theme.text||'#63667e'}};
+      o.plotOptions.column.maxPointWidth=38;o.plotOptions.bar.maxPointWidth=16;
+      o.yAxis.maxPadding=.2;
+      if(key==='equip')o.series[1].color='#c6d7ec';
+      if(key==='hr')o.series[0].data.forEach(p=>p.color=colors[0]);
+    }
+    if(key==='physical'){o.plotOptions.column.maxPointWidth=22;o.yAxis.tickInterval=25;}
+    if(key==='rial'){o.series[0].fillOpacity=.18;o.series[0].lineWidth=3;o.series[0].marker={enabled:true,radius:4};}
+    if(key==='cpi'||key==='spi'){o.chart.height=144;o.pane.size='112%';o.pane.center=['50%','76%'];o.yAxis.labels.distance=11;o.series[0].dataLabels.style.fontSize='23px';o.series[0].dataLabels.y=6;}
     return o;
   }
   return {catalog,options};

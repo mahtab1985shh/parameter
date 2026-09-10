@@ -41,9 +41,13 @@ function drawProjectChart(id,key,data){
 }
 `;
   code=code.replace('var chartRegistry = {};','var chartRegistry = {};'+helper);
+  code=code.replace('var chartRegistry = {};',()=>fs.readFileSync(path.join(__dirname,'project-dashboard-layout.js'),'utf8')+'\nvar chartRegistry = {};');
+  code=code.replace('buildKPIGrid();','buildKPIGrid();layoutProjectDashboard();');
+  code=code.replace('function renderAll(contract){','function renderAll(contract){updateProjectOverview(deriveData(contract));');
   code=code.replace("activeTab = tab;","activeTab = tab;\n  requestAnimationFrame(function(){Object.keys(chartRegistry).forEach(function(k){chartRegistry[k].reflow()})});");
   if(/new Chart\(|Chart\.defaults|\.getContext\(/.test(code))throw Error('Unmigrated Chart.js API');
   return (doc.slice(0,start)+code+doc.slice(end))
+    .replace('</head>',()=>'<style>'+fs.readFileSync(path.join(__dirname,'project-dashboard-layout.css'),'utf8')+'</style></head>')
     .replaceAll('هزینه واقعی پروژه نسبت به هزینه تحقق‌یافته آن','ارزش کار انجام‌شده نسبت به هزینه واقعی پروژه')
     .replaceAll('Chart.js global theme','Highcharts global theme');
 };

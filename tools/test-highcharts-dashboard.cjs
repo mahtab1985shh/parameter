@@ -14,8 +14,13 @@ try{
   const live=()=>w.Highcharts.charts.filter(Boolean);
   assert.equal(live().length,10);
   assert.equal(w.document.querySelectorAll('#panelProject .highcharts-root').length,10);
+  assert.equal(w.document.querySelectorAll('#projectOverview>div').length,4);
+  assert.equal(w.document.querySelector('#chartScurve').closest('.card').dataset.widget,'scurve');
+  assert.equal(w.document.querySelector('#gaugeCPI').closest('.card').dataset.widget,'cpi');
+  const summaryBefore=w.document.getElementById('projectOverview').textContent;
   const financial=live().find(c=>c.renderTo.id==='chartFinancial');const before=financial.series[0].data[0].y;
   w.document.getElementById('comboBtn').click();const choices=w.document.querySelectorAll('#comboList [role="option"]');assert.ok(choices.length>1);choices[1].click();assert.notEqual(financial.series[0].data[0].y,before);
+  assert.notEqual(w.document.getElementById('projectOverview').textContent,summaryBefore);
   for(const key of ['scurve','financial','physical','rial','hr','equip','temp']){
     const button=w.document.querySelector('[data-detail="'+key+'"]');assert.ok(button,key);button.click();assert.ok(w.document.querySelector('#detailBody .highcharts-root'),key);w.document.getElementById('detailBack').click();assert.equal(live().length,10);
   }
