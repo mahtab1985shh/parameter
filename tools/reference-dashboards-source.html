@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد پروژه</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap">
+<style>
+  /* ============ Design tokens ============ */
+  :root{
+    color-scheme: light;
+    --bg: #f3f4fb;
+    --bg-soft: #eceefa;
+    --surface: #ffffff;
+    --surface-2: #fbfbfe;
+    --border: #e4e6f2;
+    --border-soft: #edeef8;
+    --text-primary: #1b1d33;
+    --text-secondary: #63667e;
+    --text-muted: #9294ab;
+
+    --brand: #5b53e0;
+    --brand-strong: #4640c2;
+    --brand-soft: #eeecff;
+    --brand-soft-strong: #e1ddff;
+
+    /* categorical data series (validated) */
+    --s1: #2a78d6; /* blue */
+    --s2: #eb6834; /* orange */
+    --s3: #1baf7a; /* aqua */
+    --s4: #eda100; /* yellow */
+    --s5: #e0699a; /* magenta */
+    --s6: #2f9e2f; /* green */
+    --s7: #4a3aa7; /* violet */
+    --s8: #e34948; /* red */
+
+    /* status (fixed, never themed) */
+    --good: #0ca30c;
+    --warning: #d98c00;
+    --serious: #d5673c;
+    --critical: #d03b3b;
+
+    --chart-surface: #fcfcfe;
+    --grid-line: #e7e7f0;
+    --axis-line: #cfd0e0;
+    --chart-muted: #8b8da3;
+
+    --shadow-sm: 0 1px 2px rgba(24,24,52,.05);
+    --shadow-md: 0 10px 28px -14px rgba(24,24,52,.20);
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 9px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg: #101127;
+      --bg-soft: #14152c;
+      --surface: #181a36;
+      --surface-2: #1d1f3d;
+      --border: #2b2d4e;
+      --border-soft: #24263f;
+      --text-primary: #f2f2fb;
+      --text-secondary: #a9abc7;
+      --text-muted: #7b7d9c;
+
+      --brand: #9089ff;
+      --brand-strong: #ada6ff;
+      --brand-soft: #262756;
+      --brand-soft-strong: #302f6b;
+
+      --s1: #3987e5; --s2: #d95926; --s3: #22c290; --s4: #c98500;
+      --s5: #e483ac; --s6: #3fb63f; --s7: #9085e9; --s8: #e66767;
+
+      --good: #1dbf1d; --warning: #f0a900; --serious: #e88a5f; --critical: #e66767;
+
+      --chart-surface: #1a1c3a;
+      --grid-line: #2a2c4c;
+      --axis-line: #3a3c5f;
+      --chart-muted: #8688aa;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.25);
+      --shadow-md: 0 12px 30px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg: #101127; --bg-soft: #14152c; --surface: #181a36; --surface-2: #1d1f3d;
+    --border: #2b2d4e; --border-soft: #24263f;
+    --text-primary: #f2f2fb; --text-secondary: #a9abc7; --text-muted: #7b7d9c;
+    --brand: #9089ff; --brand-strong: #ada6ff; --brand-soft: #262756; --brand-soft-strong: #302f6b;
+    --s1: #3987e5; --s2: #d95926; --s3: #22c290; --s4: #c98500;
+    --s5: #e483ac; --s6: #3fb63f; --s7: #9085e9; --s8: #e66767;
+    --good: #1dbf1d; --warning: #f0a900; --serious: #e88a5f; --critical: #e66767;
+    --chart-surface: #1a1c3a; --grid-line: #2a2c4c; --axis-line: #3a3c5f; --chart-muted: #8688aa;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.25); --shadow-md: 0 12px 30px -14px rgba(0,0,0,.55);
+  }
+
+  *{ box-sizing:border-box; }
+  body{ background:var(--bg); }
+  .app{
+    direction: rtl;
+    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, system-ui, sans-serif;
+    color: var(--text-primary);
+    background: var(--bg);
+    min-height:100%;
+    font-variant-numeric: proportional-nums;
+  }
+  .num{ direction:ltr; unicode-bidi:isolate; font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1; }
+  h1,h2,h3,p{ margin:0; }
+  button{ font-family:inherit; }
+  ::selection{ background:var(--brand-soft-strong); }
+
+  /* ============ Topbar ============ */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar__inner{
+    max-width:1760px; margin:0 auto; padding:14px 28px;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand__mark{
+    width:38px; height:38px; border-radius:11px; flex:none;
+    background: linear-gradient(135deg, var(--brand), #9d7dff);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--shadow-sm);
+  }
+  .brand__mark svg{ width:20px; height:20px; stroke:#fff; }
+  .brand__text h1{ font-size:15.5px; font-weight:800; letter-spacing:.1px; }
+  .brand__text p{ font-size:11.5px; color:var(--text-muted); margin-top:1px; }
+
+  .topbar__spacer{ flex:1 1 auto; }
+
+  /* combobox */
+  .combo{ position:relative; width:min(400px, 92vw); }
+  .combo__button{
+    width:100%; display:flex; align-items:center; gap:10px;
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:12px; padding:8px 12px; cursor:pointer;
+    text-align:right; transition:border-color .15s, box-shadow .15s;
+  }
+  .combo__button:hover{ border-color: color-mix(in srgb, var(--brand) 45%, var(--border)); }
+  .combo__button.is-open{ border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-soft); }
+  .combo__icon{ flex:none; width:30px; height:30px; border-radius:9px; background:var(--brand-soft); display:flex; align-items:center; justify-content:center; }
+  .combo__icon svg{ width:15px; height:15px; stroke:var(--brand); }
+  .combo__labels{ flex:1 1 auto; min-width:0; }
+  .combo__eyebrow{ font-size:10.5px; color:var(--text-muted); font-weight:600; }
+  .combo__value{ font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .combo__chev{ flex:none; width:14px; height:14px; stroke:var(--text-muted); transition:transform .15s; }
+  .combo__button.is-open .combo__chev{ transform:rotate(180deg); }
+
+  .combo__panel{
+    position:absolute; inset-inline:0; top:calc(100% + 8px);
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+    box-shadow: var(--shadow-md); overflow:hidden; z-index:50;
+    opacity:0; transform:translateY(-6px) scale(.99); pointer-events:none;
+    transition:opacity .14s ease, transform .14s ease;
+  }
+  .combo__panel.is-open{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+  .combo__search-wrap{ padding:10px; border-bottom:1px solid var(--border-soft); position:relative; }
+  .combo__search-wrap svg{ position:absolute; top:50%; right:20px; transform:translateY(-50%); width:15px; height:15px; stroke:var(--text-muted); }
+  .combo__search{
+    width:100%; border:1px solid var(--border); background:var(--bg-soft); border-radius:9px;
+    padding:9px 38px 9px 12px; font-size:13px; color:var(--text-primary); outline:none;
+    font-family:inherit;
+  }
+  .combo__search:focus{ border-color:var(--brand); background:var(--surface); }
+  .combo__list{ max-height:290px; overflow-y:auto; padding:6px; }
+  .combo__item{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; cursor:pointer;
+  }
+  .combo__item:hover, .combo__item.is-active{ background:var(--brand-soft); }
+  .combo__item-check{ flex:none; width:16px; height:16px; stroke:var(--brand); opacity:0; }
+  .combo__item.is-selected .combo__item-check{ opacity:1; }
+  .combo__item-main{ flex:1 1 auto; min-width:0; }
+  .combo__item-title{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .combo__item-sub{ font-size:11px; color:var(--text-muted); margin-top:1px; }
+  .combo__empty{ padding:22px 10px; text-align:center; color:var(--text-muted); font-size:12.5px; }
+
+  .status-pill{ flex:none; font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+  .status-pill--active{ background:color-mix(in srgb, var(--good) 16%, transparent); color:var(--good); }
+  .status-pill--draft{ background:color-mix(in srgb, var(--s4) 20%, transparent); color:var(--warning); }
+  .status-pill--paused{ background:color-mix(in srgb, var(--critical) 14%, transparent); color:var(--critical); }
+  .status-pill--finishing{ background:color-mix(in srgb, var(--s1) 16%, transparent); color:var(--s1); }
+
+  .topbar__actions{ display:flex; align-items:center; gap:8px; }
+  .icon-btn{
+    width:36px; height:36px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary);
+    transition: background .15s, transform .15s, border-color .15s;
+  }
+  .icon-btn svg{ width:16px; height:16px; stroke:currentColor; }
+  .icon-btn:hover{ background:var(--brand-soft); color:var(--brand); border-color:var(--brand-soft-strong); }
+  .icon-btn:active{ transform:scale(.94); }
+  .icon-btn.is-spinning svg{ animation:spin .6s linear; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .meta-strip{
+    max-width:1760px; margin:0 auto; padding:0 28px 14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .meta-chip{
+    display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-secondary);
+    background:var(--surface-2); border:1px solid var(--border-soft); padding:5px 10px; border-radius:8px;
+  }
+  .meta-chip svg{ width:13px; height:13px; stroke:var(--text-muted); }
+  .meta-chip b{ color:var(--text-primary); font-weight:700; }
+  .meta-updated{ font-size:11px; color:var(--text-muted); margin-inline-start:auto; }
+
+  /* ============ Layout ============ */
+  .main{ max-width:1760px; margin:0 auto; padding:6px 28px 48px; display:flex; flex-direction:column; gap:26px; }
+
+  .section__head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .section__dot{ width:9px; height:9px; border-radius:3px; flex:none; }
+  .section__title{ font-size:14.5px; font-weight:800; }
+  .section__sub{ font-size:11.5px; color:var(--text-muted); }
+
+  .grid{ display:grid; grid-template-columns:repeat(12, 1fr); gap:16px; }
+  .col-3{ grid-column: span 3; }
+  .col-4{ grid-column: span 4; }
+  .col-5{ grid-column: span 5; }
+  .col-6{ grid-column: span 6; }
+  .col-7{ grid-column: span 7; }
+  .col-8{ grid-column: span 8; }
+  .col-9{ grid-column: span 9; }
+  .col-12{ grid-column: span 12; }
+  @media (max-width:1080px){
+    .grid{ grid-template-columns:repeat(6,1fr); }
+    .col-3{ grid-column:span 3; } .col-4{ grid-column:span 3; } .col-5{ grid-column:span 6; }
+    .col-6{ grid-column:span 6; } .col-7{ grid-column:span 6; } .col-8{ grid-column:span 6; }
+    .col-9{ grid-column:span 6; } .col-12{ grid-column:span 6; }
+  }
+  @media (max-width:640px){
+    .grid{ grid-template-columns:1fr; }
+    .col-3,.col-4,.col-5,.col-6,.col-7,.col-8,.col-9,.col-12{ grid-column:span 1; }
+  }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm); display:flex; flex-direction:column; overflow:hidden;
+    transition: box-shadow .18s ease, transform .18s ease;
+  }
+  .card:hover{ box-shadow:var(--shadow-md); }
+  .card__head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:16px 18px 4px; }
+  .card__title{ font-size:13.5px; font-weight:700; }
+  .card__caption{ font-size:11px; color:var(--text-muted); margin-top:2px; }
+  .card__menu{ flex:none; width:28px; height:28px; border-radius:8px; border:none; background:transparent; color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .card__menu:hover{ background:var(--bg-soft); color:var(--text-secondary); }
+  .card__menu svg{ width:16px; height:16px; stroke:currentColor; }
+  .card__body{ padding:10px 18px 18px; flex:1 1 auto; display:flex; flex-direction:column; }
+
+  .chart-box{ position:relative; width:100%; overflow:hidden; }
+  .chart-box canvas{ width:100% !important; height:100% !important; display:block; }
+  .legend-row{ display:flex; flex-wrap:wrap; gap:8px 16px; padding:2px 2px 0; margin-top:6px; }
+  .legend-row__item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-secondary); }
+  .legend-row__dot{ width:9px; height:9px; border-radius:3px; flex:none; }
+
+  /* KPI cards */
+  .kpi-card{ padding:16px 18px; }
+  .kpi-card__top{ display:flex; align-items:center; justify-content:space-between; }
+  .kpi-card__label{ font-size:12px; color:var(--text-secondary); font-weight:600; }
+  .kpi-card__icon{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .kpi-card__icon svg{ width:15px; height:15px; }
+  .kpi-card__value{ font-size:22px; font-weight:800; margin-top:10px; line-height:1.2; }
+  .kpi-card__value small{ font-size:12px; font-weight:600; color:var(--text-muted); margin-inline-start:4px; }
+  .kpi-card__foot{ font-size:11px; color:var(--text-muted); margin-top:6px; }
+
+  .stat-mini-row{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .stat-mini{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 11px; border-radius:10px; background:var(--bg-soft); border:1px solid var(--border-soft); }
+  .stat-mini__label{ display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text-secondary); font-weight:600; }
+  .stat-mini__dot{ width:8px; height:8px; border-radius:2.5px; flex:none; }
+  .stat-mini__value{ font-size:12.5px; font-weight:700; }
+
+  /* gauges */
+  .gauge-row{ display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:6px; }
+  .gauge-row__value{ font-size:19px; font-weight:800; margin-top:4px; }
+  .gauge-row__label{ font-size:11.5px; color:var(--text-muted); font-weight:700; margin-top:1px; }
+  .gauge-row__caption{ font-size:11px; color:var(--text-secondary); margin-top:8px; line-height:1.6; max-width:220px; }
+
+  /* deviation cards */
+  .dev-strip{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .dev-tile{ border-radius:var(--radius-md); padding:14px 14px; color:#fff; position:relative; overflow:hidden; }
+  .dev-tile__label{ font-size:11.5px; font-weight:700; opacity:.92; }
+  .dev-tile__value{ font-size:15.5px; font-weight:800; margin-top:8px; }
+  .dev-strip2{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:12px; }
+  .dev-out{ border:1.5px solid var(--border); border-radius:var(--radius-md); padding:13px 14px; }
+  .dev-out__label{ font-size:11.5px; font-weight:700; color:var(--text-secondary); }
+  .dev-out__value{ font-size:15px; font-weight:800; margin-top:7px; }
+  .dev-out__value.is-neg{ color:var(--critical); }
+  .dev-out__value.is-pos{ color:var(--good); }
+  @media(max-width:520px){ .dev-strip{ grid-template-columns:1fr; } }
+
+  /* calendar */
+  .cal__head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .cal__title{ font-size:13px; font-weight:700; }
+  .cal__nav{ display:flex; gap:4px; }
+  .cal__nav button{ width:26px; height:26px; border-radius:7px; border:1px solid var(--border); background:var(--surface-2); cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); }
+  .cal__nav button svg{ width:13px; height:13px; stroke:currentColor; }
+  .cal__grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .cal__dow{ font-size:10.5px; color:var(--text-muted); text-align:center; font-weight:700; padding-bottom:4px; }
+  .cal__cell{ aspect-ratio:1/0.82; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; background:var(--bg-soft); color:var(--text-secondary); position:relative; }
+  .cal__cell--empty{ background:transparent; }
+  .cal__cell--active{ background:color-mix(in srgb, var(--good) 16%, transparent); color:var(--good); }
+  .cal__cell--half{ background:color-mix(in srgb, var(--warning) 18%, transparent); color:var(--warning); }
+  .cal__cell--holiday{ background:var(--border-soft); color:var(--text-muted); }
+  .cal__legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; }
+  .cal__legend-item{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-secondary); }
+  .cal__legend-dot{ width:9px; height:9px; border-radius:3px; }
+
+  /* chips grid (province density) */
+  .chips-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); gap:8px; }
+  .chip{ border-radius:10px; padding:10px 8px; text-align:center; border:1px solid var(--border-soft); }
+  .chip__name{ font-size:11px; font-weight:700; }
+  .chip__value{ font-size:14px; font-weight:800; margin-top:4px; }
+  .scale-legend{ display:flex; align-items:center; gap:8px; margin-top:12px; }
+  .scale-legend__bar{ flex:1 1 auto; height:8px; border-radius:5px; background:linear-gradient(90deg, var(--seq-0), var(--seq-1), var(--seq-2), var(--seq-3)); }
+  .scale-legend__label{ font-size:10.5px; color:var(--text-muted); font-weight:600; }
+
+  /* portfolio basket rows */
+  .basket{ display:flex; flex-direction:column; gap:12px; }
+  .basket__row{ display:flex; align-items:center; gap:12px; }
+  .basket__name{ width:56px; flex:none; font-size:12px; font-weight:700; color:var(--text-secondary); }
+  .basket__track{ flex:1 1 auto; height:11px; border-radius:6px; background:var(--bg-soft); overflow:hidden; display:flex; }
+  .basket__fill{ height:100%; border-radius:6px; }
+  .basket__num{ flex:none; font-size:12.5px; font-weight:800; width:34px; text-align:left; }
+
+  /* events */
+  .events{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:760px){ .events{ grid-template-columns:1fr; } }
+  .events__col-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .events__col-dot{ width:9px; height:9px; border-radius:3px; }
+  .events__col-title{ font-size:12.5px; font-weight:800; }
+  .events__col-count{ font-size:10.5px; color:var(--text-muted); background:var(--bg-soft); padding:1px 7px; border-radius:999px; font-weight:700; }
+  .event-card{ border:1px solid var(--border); border-radius:var(--radius-md); padding:12px 13px; margin-bottom:10px; background:var(--surface-2); }
+  .event-card__date{ display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--text-muted); font-weight:600; }
+  .event-card__date svg{ width:12px; height:12px; stroke:currentColor; }
+  .event-card__title{ font-size:12.5px; font-weight:800; margin-top:7px; }
+  .event-card__desc{ font-size:11.5px; color:var(--text-secondary); line-height:1.7; margin-top:5px; }
+
+  .empty-note{ font-size:11.5px; color:var(--text-muted); text-align:center; padding:14px 0; }
+
+  /* ============ Tabs ============ */
+  .tabbar{ max-width:1760px; margin:0 auto; padding:0 28px; display:flex; gap:4px; }
+  .tabbar__btn{
+    display:flex; align-items:center; gap:7px; padding:10px 16px; border:none; background:transparent;
+    font-family:inherit; font-size:12.5px; font-weight:700; color:var(--text-secondary); cursor:pointer;
+    border-bottom:2.5px solid transparent; margin-bottom:-1px; transition:color .15s, border-color .15s;
+  }
+  .tabbar__btn svg{ width:15px; height:15px; stroke:currentColor; }
+  .tabbar__btn:hover{ color:var(--text-primary); }
+  .tabbar__btn.is-active{ color:var(--brand); border-color:var(--brand); }
+  #app.tab-default .only-project{ display:none !important; }
+  #app.tab-project .only-default{ display:none !important; }
+
+  /* ============ Default dashboard — fixed board, matches the real
+     "Parameter" system's default-dashboard-v2 grid (36 cols x 12 rows,
+     no page scroll — only long lists scroll inside their own card) ============ */
+  #panelDefault.tab-panel{ display:flex; flex-direction:column; height:calc(100vh - 170px); min-height:560px; }
+  #app.tab-default .main{ padding-bottom:10px; }
+  #app.tab-default footer.page-foot{ display:none; }
+  .pd-board{
+    flex:1; min-height:0; display:grid;
+    grid-template-columns:repeat(36,minmax(0,1fr));
+    grid-template-rows:repeat(12,minmax(0,1fr));
+    gap:10px; overflow:hidden;
+  }
+  .pd-card{ position:relative; min-width:0; min-height:0; overflow:hidden; display:flex; flex-direction:column;
+    border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); box-shadow:var(--shadow-sm); }
+  .pd-card-head{ flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 14px; border-bottom:1px solid var(--border-soft); }
+  .pd-card-head h3{ margin:0; font-size:12px; font-weight:800; display:flex; align-items:center; gap:8px; }
+  .pd-card-head small{ color:var(--text-muted); font-size:10px; font-weight:700; white-space:nowrap; }
+  .pd-chart-icon{ display:grid; place-items:center; width:24px; height:24px; border-radius:50%; color:#fff; flex:none; }
+  .pd-chart-icon svg{ width:13px; height:13px; stroke:currentColor; }
+
+  /* KPI strip + compact info bar (day/date, time, weather, motivational line) */
+  .pd-kpis{ grid-column:1/28; grid-row:1/3; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  .pd-kpi{ position:relative; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); box-shadow:var(--shadow-sm); }
+  .pd-kpi:before{ content:""; position:absolute; inset-block:0; inset-inline-start:0; width:4px; background:var(--kpi); }
+  .pd-kpi-copy span{ display:block; margin-bottom:6px; color:var(--text-secondary); font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pd-kpi-copy strong{ display:block; color:var(--text-primary); font-size:23px; line-height:1; font-weight:900; }
+  .pd-kpi-copy em{ margin-inline-start:5px; color:var(--text-muted); font-size:10.5px; font-style:normal; font-weight:700; }
+  .pd-kpi-icon{ display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border-radius:10px; background:color-mix(in srgb, var(--kpi) 14%, white); color:var(--kpi); }
+  .pd-kpi-icon svg{ width:19px; height:19px; stroke:currentColor; }
+
+  .pd-info{ grid-column:28/37; grid-row:1/3; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .pd-info>div{ display:flex; align-items:center; gap:7px; padding:10px 7px; min-width:0; }
+  .pd-info>div+div{ border-inline-start:1px solid var(--border-soft); }
+  .pd-info i{ display:grid; place-items:center; flex:0 0 28px; width:28px; height:28px; border-radius:9px; background:var(--brand-soft); color:var(--brand); }
+  .pd-info i svg{ width:14px; height:14px; stroke:currentColor; }
+  .pd-info p{ min-width:0; }
+  .pd-info b{ display:block; color:var(--text-primary); font-size:10px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pd-info span{ display:block; margin-top:2px; color:var(--text-muted); font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* Cities list (replaces the Iran map) + "show on map" per project */
+  .pd-cities{ grid-column:1/15; grid-row:3/8; }
+  .pd-city-list{ flex:1; min-height:0; overflow:auto; padding:6px 10px; display:flex; flex-direction:column; gap:6px; }
+  .pd-city-row{ display:flex; align-items:center; gap:9px; padding:8px 9px; border:1px solid var(--border-soft); border-radius:10px; background:var(--surface-2); }
+  .pd-city-dot{ width:8px; height:8px; border-radius:50%; flex:none; background:var(--mon-blue,#0073ea); }
+  .pd-city-name{ flex:1 1 auto; min-width:0; font-size:11.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pd-city-count{ flex:none; font-size:10.5px; color:var(--text-muted); font-weight:700; }
+  .pd-city-map{ flex:none; display:flex; align-items:center; gap:5px; border:1px solid transparent; background:var(--mon-blue-tint,#eef6ff); color:var(--mon-blue,#0073ea); font-size:10px; font-weight:700; border-radius:8px; padding:6px 9px; cursor:pointer; white-space:nowrap; text-decoration:none; transition:background .15s,color .15s; }
+  .pd-city-map svg{ width:12px; height:12px; stroke:currentColor; }
+  .pd-city-map:hover{ background:var(--mon-blue,#0073ea); color:#fff; }
+
+  /* Documents in progress (سندهای در دست اقدام) */
+  .pd-pending{ grid-column:1/15; grid-row:8/13; }
+  .pd-pending-list{ flex:1; min-height:0; overflow:auto; padding:2px 14px 8px; display:flex; flex-direction:column; }
+  .pd-pending-row{ display:flex; align-items:flex-start; gap:9px; padding:9px 0; border-bottom:1px solid var(--border-soft); }
+  .pd-pending-row:last-child{ border-bottom:none; }
+  .pd-pending-icon{ color:var(--mon-blue,#0073ea); padding-top:2px; flex:none; }
+  .pd-pending-icon svg{ width:16px; height:16px; stroke:currentColor; }
+  .pd-pending-copy{ flex:1; min-width:0; }
+  .pd-pending-copy b{ display:block; font-size:11px; color:var(--text-primary); font-weight:700; }
+  .pd-pending-copy small{ display:block; font-size:10px; color:var(--text-muted); margin-top:2px; overflow-wrap:anywhere; }
+  .pd-pending-pill{ flex:none; margin-top:1px; }
+
+  /* Right column: contract status, portfolio basket, amounts, today */
+  .pd-side{ grid-column:15/37; grid-row:3/13; display:grid; grid-template-rows:minmax(120px,1.15fr) minmax(90px,.85fr) minmax(96px,.9fr) minmax(96px,.9fr); gap:10px; min-height:0; }
+  .pd-status-body{ flex:1; min-height:0; display:grid; grid-template-columns:44% 1fr; align-items:center; gap:8px; padding:6px 14px; }
+  .pd-donut{ position:relative; width:min(94px,100%); aspect-ratio:1; margin:auto; border-radius:50%; }
+  .pd-donut:after{ content:attr(data-total); position:absolute; inset:26%; display:grid; place-items:center; border-radius:50%; background:var(--surface); color:var(--text-primary); font-size:13px; font-weight:900; }
+  .pd-status-list{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+  .pd-status-row{ display:flex; align-items:center; justify-content:space-between; gap:5px; font-size:10.5px; color:var(--text-secondary); font-weight:700; }
+  .pd-status-row span{ display:flex; align-items:center; gap:5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pd-status-row i{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .pd-status-row b{ color:var(--text-primary); font-size:11px; flex:none; }
+
+  .pd-basket{ display:flex; flex-direction:column; gap:6px; padding:8px 14px; flex:1; min-height:0; justify-content:center; overflow:auto; }
+  .pd-basket-row{ display:flex; align-items:center; gap:10px; }
+  .pd-basket-name{ width:44px; flex:none; font-size:10.5px; font-weight:700; color:var(--text-secondary); }
+  .pd-basket-track{ flex:1 1 auto; height:9px; border-radius:5px; background:var(--bg-soft); overflow:hidden; display:flex; }
+  .pd-basket-fill{ height:100%; }
+  .pd-basket-num{ flex:none; font-size:11px; font-weight:800; width:20px; text-align:left; }
+
+  .pd-amount-body{ padding:8px 14px; flex:1; min-height:0; display:flex; flex-direction:column; justify-content:center; gap:8px; overflow:auto; }
+  .pd-amount-total{ font-size:10.5px; color:var(--text-secondary); font-weight:700; }
+  .pd-amount-total b{ display:block; margin-top:3px; font-size:15px; color:var(--text-primary); font-weight:900; }
+  .pd-amount-bar{ display:flex; width:100%; height:24px; border-radius:8px; overflow:hidden; }
+  .pd-amount-seg{ min-width:2px; }
+  .pd-amount-legend{ display:flex; gap:10px; flex-wrap:wrap; }
+  .pd-amount-legend span{ display:flex; align-items:center; gap:5px; font-size:9.5px; color:var(--text-muted); font-weight:700; }
+  .pd-amount-legend i{ width:7px; height:7px; border-radius:2px; flex:none; }
+
+  .pd-today-body{ flex:1; min-height:0; overflow:auto; padding:8px 14px; display:flex; flex-direction:column; gap:6px; justify-content:flex-start; }
+  .pd-today-item{ display:flex; align-items:center; gap:9px; padding:6px 8px; border:1px solid var(--border-soft); border-radius:9px; cursor:pointer; }
+  .pd-today-item p{ flex:1; min-width:0; }
+  .pd-today-item i{ display:grid; place-items:center; flex:0 0 26px; width:26px; height:26px; border-radius:8px; background:var(--item-bg); color:var(--item-color); }
+  .pd-today-item i svg{ width:13px; height:13px; stroke:currentColor; }
+  .pd-today-item b{ display:block; font-size:10.5px; color:var(--text-primary); font-weight:700; }
+  .pd-today-item span{ display:block; margin-top:1px; font-size:9px; color:var(--text-muted); font-weight:600; }
+  .pd-today-item.is-done{ opacity:.55; }
+  .pd-today-item.is-done b{ text-decoration:line-through; }
+
+  @media(max-width:1080px){
+    #panelDefault.tab-panel{ height:auto; min-height:0; }
+    #app.tab-default .main{ padding-bottom:48px; }
+    #app.tab-default footer.page-foot{ display:block; }
+    .pd-board{ display:flex; flex-direction:column; height:auto; overflow:visible; gap:14px; }
+    .pd-kpis{ display:grid; grid-template-columns:1fr 1fr; }
+    .pd-info{ grid-template-columns:1fr; }
+    .pd-info>div+div{ border-inline-start:none; border-top:1px solid var(--border-soft); }
+    .pd-cities,.pd-pending{ min-height:280px; }
+    .pd-side{ grid-template-rows:none; }
+    .pd-status-body,.pd-basket,.pd-amount-body,.pd-today-body{ min-height:150px; }
+  }
+  @media(max-width:640px){ .pd-kpis{ grid-template-columns:1fr; } }
+
+  /* ============ Documents in progress ============ */
+  .doc-list{ display:flex; flex-direction:column; gap:8px; }
+  .doc-row{ display:flex; align-items:center; gap:12px; padding:11px 12px; border:1px solid var(--border-soft); border-radius:11px; background:var(--surface-2); }
+  .doc-row__icon{ width:34px; height:34px; border-radius:10px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex:none; }
+  .doc-row__icon svg{ width:16px; height:16px; stroke:var(--text-secondary); }
+  .doc-row__main{ flex:1 1 auto; min-width:0; }
+  .doc-row__title{ font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .doc-row__sub{ font-size:10.5px; color:var(--text-muted); margin-top:2px; }
+  .doc-pill{ flex:none; font-size:10px; font-weight:700; padding:4px 10px; border-radius:999px; white-space:nowrap; }
+  .doc-pill--review{ background:color-mix(in srgb, var(--s1) 16%, transparent); color:var(--s1); }
+  .doc-pill--pending{ background:color-mix(in srgb, var(--warning) 20%, transparent); color:var(--warning); }
+  .doc-pill--fix{ background:color-mix(in srgb, var(--critical) 14%, transparent); color:var(--critical); }
+  .doc-pill--approved{ background:color-mix(in srgb, var(--good) 16%, transparent); color:var(--good); }
+
+  /* ============ Today reminders / checklist ============ */
+  .todo-list{ display:flex; flex-direction:column; gap:7px; }
+  .todo-row{ display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:11px; background:var(--surface-2); border:1px solid var(--border-soft); cursor:pointer; user-select:none; transition:background .15s; }
+  .todo-row:hover{ background:var(--brand-soft); }
+  .todo-row__check{ width:20px; height:20px; border-radius:7px; border:1.6px solid var(--border); flex:none; display:flex; align-items:center; justify-content:center; background:var(--surface); transition:background .15s, border-color .15s; }
+  .todo-row__check svg{ width:12px; height:12px; stroke:#fff; opacity:0; transition:opacity .1s; }
+  .todo-row.is-done .todo-row__check{ background:var(--good); border-color:var(--good); }
+  .todo-row.is-done .todo-row__check svg{ opacity:1; }
+  .todo-row__time{ flex:none; font-size:11px; font-weight:700; color:var(--brand); width:44px; }
+  .todo-row__title{ flex:1 1 auto; font-size:12.5px; font-weight:600; }
+  .todo-row.is-done .todo-row__title{ text-decoration:line-through; color:var(--text-muted); }
+
+  footer.page-foot{ text-align:center; padding:6px 0 30px; font-size:11px; color:var(--text-muted); }
+
+  /* ============ "View details" button on every dashboard item ============ */
+  .card__detail{ display:flex; align-items:center; gap:5px; flex:none; font:inherit; font-size:10.5px; font-weight:700;
+    color:var(--brand); background:var(--brand-soft); border:1px solid var(--brand-soft-strong); border-radius:8px;
+    padding:6px 10px; cursor:pointer; white-space:nowrap; transition:background .15s, color .15s, border-color .15s; }
+  .card__detail:hover{ background:var(--brand); color:#fff; border-color:var(--brand); }
+  .card__detail svg{ width:12px; height:12px; stroke:currentColor; flex:none; }
+  .kpi-card__top .card__detail,.pd-card-head .card__detail{ font-size:9.5px; padding:4px 8px; gap:4px; }
+  .pd-card-head .card__detail svg{ width:10px; height:10px; }
+
+  /* ============ Detail page (opens when a "view details" button is clicked) ============ */
+  .detail-view{ position:fixed; inset:0; z-index:200; background:var(--bg); overflow-y:auto; }
+  .detail-view[hidden]{ display:none; }
+  .detail-view__top{ position:sticky; top:0; z-index:5; background:color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--border); padding:16px 28px; display:flex; align-items:center; gap:18px; }
+  .detail-back{ display:flex; align-items:center; gap:6px; border:1px solid var(--border); background:var(--surface-2);
+    color:var(--text-secondary); font:inherit; font-size:12.5px; font-weight:700; border-radius:10px; padding:9px 15px; cursor:pointer; flex:none; }
+  .detail-back:hover{ background:var(--brand-soft); color:var(--brand); border-color:var(--brand-soft-strong); }
+  .detail-back svg{ width:15px; height:15px; stroke:currentColor; }
+  .detail-view__title{ min-width:0; }
+  .detail-view__title h2{ font-size:15.5px; font-weight:800; }
+  .detail-view__title p{ font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+  .detail-view__body{ max-width:1240px; margin:0 auto; padding:26px 28px 60px; display:flex; flex-direction:column; gap:20px; }
+  .detail-desc{ font-size:12.5px; color:var(--text-secondary); line-height:1.9; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:var(--radius-md); padding:14px 16px; }
+  .detail-stat-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; }
+  .detail-stat{ border:1px solid var(--border); border-radius:var(--radius-md); padding:14px 16px; background:var(--surface); box-shadow:var(--shadow-sm); }
+  .detail-stat span{ display:block; font-size:11px; color:var(--text-muted); font-weight:700; }
+  .detail-stat b{ display:block; margin-top:7px; font-size:19px; font-weight:900; }
+  .detail-chart-box{ position:relative; width:100%; height:340px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); padding:18px; box-sizing:border-box; }
+  .detail-chart-box canvas{ width:100% !important; height:100% !important; display:block; }
+  .detail-table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); }
+  .detail-table{ width:100%; border-collapse:collapse; font-size:12px; min-width:420px; }
+  .detail-table th,.detail-table td{ padding:10px 14px; text-align:right; border-bottom:1px solid var(--border-soft); }
+  .detail-table th{ color:var(--text-muted); font-weight:700; font-size:10.5px; background:var(--surface-2); }
+  .detail-table td{ font-weight:600; }
+  .detail-table tr:last-child td{ border-bottom:0; }
+  @media(max-width:640px){ .detail-view__top{ padding:12px 16px; } .detail-view__body{ padding:18px 16px 40px; } }
+</style>
+</head>
+<body>
+
+
+<div class="app" dir="rtl" lang="fa" id="app">
+
+  <!-- ===== Detail page — opens full-screen when a "مشاهده جزئیات" button is clicked ===== -->
+  <div class="detail-view" id="detailView" hidden>
+    <div class="detail-view__top">
+      <button class="detail-back" id="detailBack" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg>
+        بازگشت به داشبورد
+      </button>
+      <div class="detail-view__title">
+        <h2 id="detailTitle">—</h2>
+        <p id="detailSub">—</p>
+      </div>
+    </div>
+    <div class="detail-view__body" id="detailBody"></div>
+  </div>
+
+  <div class="topbar">
+    <div class="topbar__inner">
+      <div class="brand">
+        <div class="brand__mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>
+        </div>
+        <div class="brand__text">
+          <h1>داشبورد مدیریت پروژه</h1>
+          <p>نمای یکپارچه پیشرفت، هزینه و منابع قرارداد</p>
+        </div>
+      </div>
+
+      <div class="topbar__spacer"></div>
+
+      <div class="combo only-project" id="combo">
+        <button class="combo__button" id="comboBtn" aria-haspopup="listbox" aria-expanded="false">
+          <span class="combo__icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2 2 6l7 4M9 2l7 4-7 4M9 2v16M9 18l-7-4M9 18l7-4M2 6v8l7 4M16 6v8l-7 4"></path></svg></span>
+          <span class="combo__labels">
+            <span class="combo__eyebrow">قرارداد انتخاب‌شده</span>
+            <span class="combo__value" id="comboValue">—</span>
+          </span>
+          <svg class="combo__chev" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+        </button>
+        <div class="combo__panel" id="comboPanel">
+          <div class="combo__search-wrap">
+            <input class="combo__search" id="comboSearch" type="text" placeholder="جست‌وجوی نام، کد یا کارفرمای قرارداد…" autocomplete="off">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          </div>
+          <div class="combo__list" id="comboList" role="listbox"></div>
+        </div>
+      </div>
+
+      <div class="topbar__actions">
+        <button class="icon-btn" id="refreshBtn" title="به‌روزرسانی داده‌ها" aria-label="به‌روزرسانی">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"></path></svg>
+        </button>
+        <button class="icon-btn only-project" id="filterBtn" title="فیلترهای پیشرفته" aria-label="فیلتر">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 8v6l-4-2v-4L4 5Z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <button class="tabbar__btn is-active" id="tabBtnDefault" data-tab="default">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5Z"></path></svg>
+        داشبورد پیش‌فرض
+      </button>
+      <button class="tabbar__btn" id="tabBtnProject" data-tab="project">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"></rect><rect x="14" y="3" width="7" height="5" rx="2"></rect><rect x="14" y="12" width="7" height="9" rx="2"></rect><rect x="3" y="16" width="7" height="5" rx="2"></rect></svg>
+        داشبورد پروژه
+      </button>
+    </div>
+
+    <div class="meta-strip only-project">
+      <div class="meta-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>
+        بازه: <b id="metaRange">۱۴۰۰/۰۱/۰۱ تا ۱۴۰۱/۰۲/۳۱</b>
+      </div>
+      <div class="meta-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"></path></svg>
+        کارفرما: <b id="metaClient">—</b>
+      </div>
+      <div class="meta-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M8 3v18M3 9h5"></path></svg>
+        کد قرارداد: <b class="num" id="metaCode">—</b>
+      </div>
+      <span class="meta-updated" id="metaUpdated">آخرین به‌روزرسانی: هم‌اکنون</span>
+    </div>
+  </div>
+
+  <main class="main">
+
+  <!-- =====================================================================
+       DEFAULT DASHBOARD (portfolio-wide overview, not tied to one contract)
+       ===================================================================== -->
+  <div id="panelDefault" class="tab-panel only-default">
+    <div class="pd-board">
+
+      <div class="pd-kpis">
+        <div class="pd-kpi" style="--kpi:#1688c7">
+          <div class="pd-kpi-copy"><span>تعداد کل قراردادها</span><strong class="num" id="kpiTotalContracts">—</strong><em>پیمان</em></div>
+          <div class="pd-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg></div>
+        </div>
+        <div class="pd-kpi" style="--kpi:#14a58a">
+          <div class="pd-kpi-copy"><span>پیمان‌های در حال اجرا</span><strong class="num" id="kpiActiveContracts">—</strong><em>پیمان</em></div>
+          <div class="pd-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="4" rx="1"></rect><path d="M6 7h12v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7Z"></path><path d="m9 13 2 2 4-4"></path></svg></div>
+        </div>
+        <div class="pd-kpi" style="--kpi:#d52b91">
+          <div class="pd-kpi-copy"><span>مجموع مبلغ قراردادها</span><strong class="num" id="kpiTotalAmount" style="font-size:16px">—</strong><em>ریال</em></div>
+          <div class="pd-kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1 3 2.2c0 2.8-6 1.3-6 4 0 1.3 1.3 2.3 3 2.3s3-1 3-2.3"></path></svg></div>
+        </div>
+      </div>
+
+      <div class="pd-card pd-info">
+        <div>
+          <i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg></i>
+          <p><b id="heroDate">—</b><span class="num" id="heroClock">—</span></p>
+        </div>
+        <div>
+          <i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 2.5v2.2M12 19.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"></path></svg></i>
+          <p><b id="heroWeatherTemp">—</b><span id="heroWeatherDesc">وضعیت هوا</span></p>
+        </div>
+        <div>
+          <i><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10a3 3 0 0 1 3-3h1v5a3 3 0 0 1-3 3H7v-5Zm9 0a3 3 0 0 1 3-3h1v5a3 3 0 0 1-3 3h-1v-5Z"></path></svg></i>
+          <p><b id="heroGreeting">—</b><span id="heroQuote">—</span></p>
+        </div>
+      </div>
+
+      <section class="pd-card pd-cities">
+        <header class="pd-card-head"><h3>سبد طرح‌ها به تفکیک شهر</h3><div style="display:flex;align-items:center;gap:8px"><small id="citiesCount">—</small><button class="card__detail" data-detail="cities" data-title="سبد طرح‌ها به تفکیک شهر" data-sub="تعداد طرح فعال هر شهر و دسترسی سریع به نقشه"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button></div></header>
+        <div class="pd-city-list" id="cityList"></div>
+      </section>
+
+      <section class="pd-card pd-pending">
+        <header class="pd-card-head"><h3>سندهای در دست اقدام</h3><div style="display:flex;align-items:center;gap:8px"><small id="docCaption">—</small><button class="card__detail" data-detail="pending" data-title="سندهای در دست اقدام" data-sub="اسناد ارسال‌شده برای بررسی یا اقدام شما"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button></div></header>
+        <div class="pd-pending-list" id="docList"></div>
+      </section>
+
+      <div class="pd-side">
+        <section class="pd-card">
+          <header class="pd-card-head"><h3><span class="pd-chart-icon" style="background:#148ac7"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18"></path></svg></span>وضعیت پیمان</h3><button class="card__detail" data-detail="status" data-title="وضعیت پیمان" data-sub="توزیع قراردادهای سبد بر اساس مرحله فعلی"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button></header>
+          <div class="pd-status-body">
+            <div class="pd-donut" id="statusDonut"></div>
+            <div class="pd-status-list" id="statusList"></div>
+          </div>
+        </section>
+
+        <section class="pd-card">
+          <header class="pd-card-head"><h3><span class="pd-chart-icon" style="background:#5b53e0"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3-4 3 3 4-6"></path></svg></span>وضعیت سبد طرح</h3><button class="card__detail" data-detail="basket" data-title="وضعیت سبد طرح" data-sub="تعداد کل در برابر موجود در فیلتر"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button></header>
+          <div class="pd-basket" id="basketRows"></div>
+        </section>
+
+        <section class="pd-card">
+          <header class="pd-card-head"><h3><span class="pd-chart-icon" style="background:#d52b91"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1.5"></rect><rect x="10.5" y="8" width="7" height="13" rx="1.5"></rect><rect x="18" y="12" width="3" height="9" rx="1.5"></rect></svg></span>تجمیع مبلغ قراردادها</h3><button class="card__detail" data-detail="amount" data-title="تجمیع مبلغ قراردادها" data-sub="مجموع مبلغ سبد قراردادها به تفکیک نوع فعالیت"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button></header>
+          <div class="pd-amount-body">
+            <div class="pd-amount-total">مجموع مبلغ قراردادها<b class="num" id="amountTotal">—</b></div>
+            <div class="pd-amount-bar" id="amountBar"></div>
+            <div class="pd-amount-legend" id="amountLegend"></div>
+          </div>
+        </section>
+
+        <section class="pd-card">
+          <header class="pd-card-head"><h3>فعالیت‌ها و یادآوری‌های امروز</h3><div style="display:flex;align-items:center;gap:8px"><small id="todoCaption">—</small><button class="card__detail" data-detail="today" data-title="فعالیت‌ها و یادآوری‌های امروز" data-sub="برنامه شخصی امروز شما"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button></div></header>
+          <div class="pd-today-body" id="todoList"></div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       PROJECT DASHBOARD (single selected contract, via the search filter)
+       ===================================================================== -->
+  <div id="panelProject" class="tab-panel only-project">
+
+    <!-- ===== KPI STRIP ===== -->
+    <section>
+      <div class="grid" id="kpiGrid"></div>
+    </section>
+
+    <!-- ===== FINANCIAL & PROGRESS ===== -->
+    <section>
+      <div class="section__head">
+        <span class="section__dot" style="background:var(--s1)"></span>
+        <h2 class="section__title">عملکرد مالی و پیشرفت پروژه</h2>
+        <span class="section__sub">— شاخص‌های ارزش کسب‌شده و روند اجرا</span>
+      </div>
+      <div class="grid">
+
+        <div class="card col-8" style="min-height:360px">
+          <div class="card__head">
+            <div><div class="card__title">نمودار پیشرفت پروژه (S-Curve)</div><div class="card__caption">درصد تجمعی پیشرفت برنامه‌ای در برابر تحقق‌یافته</div></div>
+            <button class="card__detail" data-detail="scurve" data-title="نمودار پیشرفت پروژه (S-Curve)" data-sub="درصد تجمعی پیشرفت برنامه‌ای در برابر تحقق‌یافته و واقعی"><span>مشاهده جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="chart-box" style="height:280px"><canvas id="chartScurve"></canvas></div>
+            <div class="legend-row" id="legendScurve"></div>
+          </div>
+        </div>
+
+        <div class="card col-4" style="min-height:360px">
+          <div class="card__head">
+            <div><div class="card__title">انحراف زمان و هزینه</div><div class="card__caption">BCWS · BCWP · ACWP (ریال)</div></div>
+            <button class="card__detail" data-detail="deviation" data-title="انحراف زمان و هزینه" data-sub="BCWS · BCWP · ACWP و شاخص‌های CV / SV"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="dev-strip" id="devTiles"></div>
+            <div class="dev-strip2" id="devOutcomes"></div>
+          </div>
+        </div>
+
+        <div class="card col-4" style="min-height:280px">
+          <div class="card__head">
+            <div><div class="card__title">شاخص‌های مالی پروژه</div><div class="card__caption">مقایسه BCWS / BCWP / ACWP</div></div>
+            <button class="card__detail" data-detail="financial" data-title="شاخص‌های مالی پروژه" data-sub="مقایسه BCWS / BCWP / ACWP"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="chart-box" style="height:200px"><canvas id="chartFinancial"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card col-4" style="min-height:280px">
+          <div class="card__head">
+            <div><div class="card__title">پیشرفت فیزیکی گزارش‌ها</div><div class="card__caption">برنامه‌ای · تحقق‌یافته · واقعی</div></div>
+            <button class="card__detail" data-detail="physical" data-title="پیشرفت فیزیکی گزارش‌ها" data-sub="برنامه‌ای · تحقق‌یافته · واقعی"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="chart-box" style="height:200px"><canvas id="chartPhysical"></canvas></div>
+            <div class="legend-row" id="legendPhysical"></div>
+          </div>
+        </div>
+
+        <div class="card col-4" style="min-height:280px">
+          <div class="card__head">
+            <div><div class="card__title">پیشرفت ریالی</div><div class="card__caption">درصد تحقق مبلغ نسبت به قرارداد</div></div>
+            <button class="card__detail" data-detail="rial" data-title="پیشرفت ریالی" data-sub="درصد تحقق مبلغ نسبت به قرارداد"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="chart-box" style="height:150px"><canvas id="chartRial"></canvas></div>
+            <div class="stat-mini-row" style="margin-top:10px">
+              <div class="stat-mini"><span class="stat-mini__label"><span class="stat-mini__dot" style="background:var(--s1)"></span>مبلغ پیشرفت ریالی</span><span class="stat-mini__value num" id="rialAmount">—</span></div>
+              <div class="stat-mini"><span class="stat-mini__label"><span class="stat-mini__dot" style="background:var(--s3)"></span>درصد پیشرفت ریالی</span><span class="stat-mini__value num" id="rialPercent">—</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== RESOURCES ===== -->
+    <section>
+      <div class="section__head">
+        <span class="section__dot" style="background:var(--s3)"></span>
+        <h2 class="section__title">منابع انسانی، ماشین‌آلات و کارگاه</h2>
+        <span class="section__sub">— در دسترس‌بودن نیرو، تجهیزات و شرایط محیطی</span>
+      </div>
+      <div class="grid">
+
+        <div class="card col-3" style="min-height:300px">
+          <div class="card__head">
+            <div><div class="card__title">نیروهای انسانی</div><div class="card__caption" id="hrCaption">—</div></div>
+            <button class="card__detail" data-detail="hr" data-title="نیروهای انسانی" data-sub="ترکیب نیروی انسانی مستقر در کارگاه"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="chart-box" style="height:220px"><canvas id="chartHR"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card col-3" style="min-height:300px">
+          <div class="card__head">
+            <div><div class="card__title">تجمیع ماشین‌آلات</div><div class="card__caption">تعداد فعال در برابر کل دستگاه‌ها</div></div>
+            <button class="card__detail" data-detail="equip" data-title="تجمیع ماشین‌آلات" data-sub="تعداد فعال در برابر کل دستگاه‌ها"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="chart-box" style="height:220px"><canvas id="chartEquip"></canvas></div>
+            <div class="legend-row" id="legendEquip"></div>
+          </div>
+        </div>
+
+        <div class="card col-3" style="min-height:300px">
+          <div class="card__head">
+            <div><div class="card__title">وضعیت کارگاه</div><div class="card__caption" id="calTitle">—</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="cal__nav"><button aria-label="ماه قبل"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button><button aria-label="ماه بعد"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></button></div>
+              <button class="card__detail" data-detail="calendar" data-title="وضعیت کارگاه" data-sub="تقویم فعالیت ماهانه کارگاه"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+            </div>
+          </div>
+          <div class="card__body">
+            <div class="cal__grid" id="calGrid"></div>
+            <div class="cal__legend">
+              <span class="cal__legend-item"><span class="cal__legend-dot" style="background:var(--good)"></span>فعال</span>
+              <span class="cal__legend-item"><span class="cal__legend-dot" style="background:var(--warning)"></span>نیمه‌فعال</span>
+              <span class="cal__legend-item"><span class="cal__legend-dot" style="background:var(--border)"></span>تعطیل</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card col-3" style="min-height:300px">
+          <div class="card__head">
+            <div><div class="card__title">وضعیت دما</div><div class="card__caption">بازه دمای کمینه و بیشینه کارگاه (درجه سانتی‌گراد)</div></div>
+            <button class="card__detail" data-detail="temp" data-title="وضعیت دما" data-sub="بازه دمای کمینه و بیشینه کارگاه (درجه سانتی‌گراد)"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+          </div>
+          <div class="card__body">
+            <div class="chart-box" style="height:220px"><canvas id="chartTemp"></canvas></div>
+            <div class="legend-row" id="legendTemp"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== EVENTS ===== -->
+    <section>
+      <div class="section__head">
+        <span class="section__dot" style="background:var(--s2)"></span>
+        <h2 class="section__title">رخدادها و اقدامات پروژه</h2>
+        <span class="section__sub">— آخرین مسائل و موانع ثبت‌شده</span>
+      </div>
+      <div class="card">
+        <div class="card__head">
+          <div><div class="card__title">فهرست رخدادها</div><div class="card__caption">مسائل باز و موانع اجرایی ثبت‌شده برای این قرارداد</div></div>
+          <button class="card__detail" data-detail="events" data-title="رخدادها و اقدامات پروژه" data-sub="مسائل و موانع ثبت‌شده"><span>جزئیات</span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+        </div>
+        <div class="card__body" style="padding-top:16px">
+          <div class="events">
+            <div>
+              <div class="events__col-head">
+                <span class="events__col-dot" style="background:var(--s5)"></span>
+                <span class="events__col-title">مسائل</span>
+                <span class="events__col-count" id="issuesCount">0</span>
+              </div>
+              <div id="issuesList"></div>
+            </div>
+            <div>
+              <div class="events__col-head">
+                <span class="events__col-dot" style="background:var(--s1)"></span>
+                <span class="events__col-title">موانع و مشکلات</span>
+                <span class="events__col-count" id="obstaclesCount">0</span>
+              </div>
+              <div id="obstaclesList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  </main>
+
+  <footer class="page-foot">طراحی مفهومی داشبورد پروژه · داده‌ها نمونه هستند و صرفاً جهت نمایش بصری تولید شده‌اند</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function fmtNum(n){ return Math.round(n).toLocaleString('en-US'); }
+function fmtRial(n){ return fmtNum(n) + ' ریال'; }
+function fmtCompact(n){
+  var a = Math.abs(n);
+  if(a >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + ' میلیارد';
+  if(a >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + ' میلیون';
+  return fmtNum(n);
+}
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function withAlpha(hex, alphaHex){ return hex + alphaHex; }
+function el(tag, cls, html){ var e = document.createElement(tag); if(cls) e.className = cls; if(html!=null) e.innerHTML = html; return e; }
+function pseudoRand(seed){ var x = Math.sin(seed*12.9898)*43758.5453; return x - Math.floor(x); }
+
+/* ============================================================
+   Contracts (mock directory)
+   ============================================================ */
+var CONTRACTS = [
+  { id:'c1', name:'احداث خط انتقال آب - فاز ۲ منطقه کرمان', code:'PRJ-1044', client:'شرکت آب و فاضلاب استان کرمان', status:'active', factor:1.00 },
+  { id:'c2', name:'بازسازی و تکمیل ساختمان اداری منطقه ۳', code:'PRJ-2210', client:'شهرداری تهران', status:'active', factor:0.42 },
+  { id:'c3', name:'احداث خط لوله انتقال گاز فارس', code:'PRJ-3305', client:'شرکت ملی گاز ایران', status:'active', factor:1.60 },
+  { id:'c4', name:'نیروگاه تولید پراکنده یزد', code:'PRJ-4108', client:'شرکت توانیر یزد', status:'active', factor:0.85 },
+  { id:'c5', name:'توسعه راه دسترسی معدن آذربایجان‌غربی', code:'PRJ-5027', client:'اداره‌کل راهداری آذربایجان‌غربی', status:'paused', factor:0.30 },
+  { id:'c6', name:'مطالعات امکان‌سنجی سد خراسان جنوبی', code:'PRJ-6091', client:'شرکت آب منطقه‌ای خراسان جنوبی', status:'draft', factor:0.15 },
+  { id:'c7', name:'نظارت کارگاهی پالایشگاه بندرعباس', code:'PRJ-7212', client:'شرکت پالایش نفت بندرعباس', status:'active', factor:1.25 },
+  { id:'c8', name:'احداث انبار مرکزی پیمانکاری اصفهان', code:'PRJ-8144', client:'سازمان صنایع اصفهان', status:'finishing', factor:0.95 }
+];
+var STATUS_LABEL = { active:'فعال', paused:'متوقف', draft:'پیش‌نویس', finishing:'رو به اتمام' };
+
+/* ============================================================
+   Base sample dataset (for the default contract, factor = 1)
+   ============================================================ */
+var BASE = {
+  duration: { active:497, inactive:18, remaining:42 },
+  amounts: { piemankari:509121831879, motaleat:6328584500, nezarat:28266000000 },
+  financial: { BCWS:323017649918, BCWP:1466823351, ACWP:1767859463 },
+  physical: {
+    categories:['عملیات خاص','تجهیز و برچیدن کارگاه'],
+    planned:[100,98], verified:[6,34], actual:[4,46]
+  },
+  hr: { drivers:12, workers:25, security:5, engineers:19, avgDuration:30 },
+  rial: { dates:['۱۴۰۰/۱۲/۲۹','۱۴۰۱/۰۱/۳۱','۱۴۰۱/۰۲/۳۱'], values:[0.6,1.8,4.6593], amount:8093550959, percent:4.6593 },
+  temperature: { dates:['۰۱/۲۶','۰۱/۲۷','۰۱/۲۸','۰۱/۲۹','۰۱/۳۰','۰۲/۰۱'], min:[23,21,25,27,24,26], max:[35,37,34,32,36,38] },
+  basket: [ {name:'طرح', total:3, filtered:0}, {name:'پروژه', total:4, filtered:0}, {name:'پیمان', total:6, filtered:0} ],
+  provinces: [ {name:'کرمان',v:3}, {name:'فارس',v:2}, {name:'آذربایجان‌غربی',v:1}, {name:'خراسان جنوبی',v:1}, {name:'یزد',v:1}, {name:'اصفهان',v:0}, {name:'هرمزگان',v:0}, {name:'تهران',v:0} ],
+  cpi: 0.83, spi: 0.91,
+  equip: { categories:['بیل مکانیکی','کامیون','جرثقیل'], active:[5,8,3], total:[10,50,5] },
+  contractStatus: { draft:1, inProgress:3, finishing:1, aboutToStart:1 }
+};
+
+var ISSUES = [
+  { date:'۱۴۰۰/۱۱/۰۱ تا ۱۴۰۰/۱۱/۳۰', title:'اخذ مجوزهای شهرداری', desc:'پیگیری از شهرداری و هماهنگی با نماینده آن جهت اخذ مجوزهای لازم برای ادامه عملیات اجرایی.' },
+  { date:'۱۴۰۰/۱۲/۰۱ تا ۱۴۰۰/۱۲/۱۵', title:'تاخیر در تامین متریال', desc:'تاخیر دو هفته‌ای در ارسال میلگرد توسط تامین‌کننده اصلی گزارش و پیگیری شد.' }
+];
+var OBSTACLES = [
+  { date:'۱۴۰۰/۱۱/۰۱ تا ۱۴۰۰/۱۱/۳۰', title:'تاخیر در آغاز پروژه', desc:'به‌دلیل عدم تامین مالی پروژه، آغاز عملیات با دو روز تاخیر صورت گرفت.' },
+  { date:'۱۴۰۱/۰۱/۱۰ تا ۱۴۰۱/۰۱/۲۰', title:'محدودیت دسترسی به کارگاه', desc:'بارش‌های شدید موجب مسدود شدن موقت مسیر دسترسی به کارگاه شد.' }
+];
+
+/* ============================================================
+   Derive per-contract data from BASE using the contract factor
+   ============================================================ */
+function scalePct(base, f){ return clamp(Math.round(base*(0.55+0.45*f)), 2, 100); }
+
+function generateScurve(f){
+  var n = 34, k = 0.27, x0 = 15 + (1-f)*6;
+  var labels = [], planned = [], verified = [], actual = [];
+  var avail = clamp(Math.round(8*f)+3, 4, 14);
+  for(var i=0;i<n;i++){
+    labels.push('دوره ' + (i+1));
+    var p = 100/(1+Math.exp(-k*(i-x0)));
+    planned.push(Math.round(p*10)/10);
+    if(i < avail){
+      verified.push(Math.round(clamp(p*0.82 + pseudoRand(i)*4, 0, 100)*10)/10);
+      actual.push(Math.round(clamp(p*0.68 + pseudoRand(i+50)*4, 0, 100)*10)/10);
+    } else { verified.push(null); actual.push(null); }
+  }
+  return { labels:labels, planned:planned, verified:verified, actual:actual };
+}
+
+function deriveData(contract){
+  var f = contract.factor;
+  var d = {};
+  d.duration = {
+    active: Math.round(BASE.duration.active*f),
+    inactive: Math.round(BASE.duration.inactive*f),
+    remaining: Math.round(BASE.duration.remaining*f)
+  };
+  d.financial = {
+    BCWS: Math.round(BASE.financial.BCWS*f),
+    BCWP: Math.round(BASE.financial.BCWP*f*1.02),
+    ACWP: Math.round(BASE.financial.ACWP*f*0.97)
+  };
+  d.physical = {
+    categories: BASE.physical.categories,
+    planned: BASE.physical.planned.map(function(v){ return scalePct(v,f); }),
+    verified: BASE.physical.verified.map(function(v){ return scalePct(v,f); }),
+    actual: BASE.physical.actual.map(function(v){ return scalePct(v,f); })
+  };
+  d.hr = {
+    drivers: Math.max(1, Math.round(BASE.hr.drivers*f)),
+    workers: Math.max(1, Math.round(BASE.hr.workers*f)),
+    security: Math.max(1, Math.round(BASE.hr.security*f)),
+    engineers: Math.max(1, Math.round(BASE.hr.engineers*f)),
+    avgDuration: Math.max(1, Math.round(BASE.hr.avgDuration*clamp(f,0.5,1.4)))
+  };
+  d.rial = {
+    dates: BASE.rial.dates,
+    values: BASE.rial.values.map(function(v){ return Math.round(clamp(v*f,0,100)*100)/100; }),
+    amount: Math.round(BASE.rial.amount*f),
+    percent: Math.round(clamp(BASE.rial.percent*f,0,100)*10000)/10000
+  };
+  var tOffset = clamp((f-1)*4, -6, 8);
+  d.temperature = {
+    dates: BASE.temperature.dates,
+    min: BASE.temperature.min.map(function(v){ return Math.round(clamp(v+tOffset,-10,48)); }),
+    max: BASE.temperature.max.map(function(v){ return Math.round(clamp(v+tOffset,-10,48)); })
+  };
+  d.cpi = Math.round(clamp(BASE.cpi + (f-1)*0.22, 0.35, 1.35)*10000)/10000;
+  d.spi = Math.round(clamp(BASE.spi + (f-1)*0.18, 0.35, 1.35)*10000)/10000;
+  d.equip = {
+    categories: BASE.equip.categories,
+    active: BASE.equip.active.map(function(v){ return Math.max(1, Math.round(v*f)); }),
+    total: BASE.equip.total.map(function(v,idx){ return Math.max(Math.round(BASE.equip.active[idx]*f), Math.round(v*f)); })
+  };
+  d.scurve = generateScurve(f);
+  d.monthIndex = Math.abs(Math.round(f*11)) % 12;
+  d.calOffset = Math.abs(Math.round(f*17)) % 7;
+  d.calMod = 5 + (Math.round(f*10) % 3);
+  return d;
+}
+
+/* ============================================================
+   Chart.js global theme
+   ============================================================ */
+var chartRegistry = {};
+function chartFont(){ return { family:"'Vazirmatn', system-ui, sans-serif", size:11 }; }
+function applyChartDefaults(){
+  Chart.defaults.font.family = "'Vazirmatn', system-ui, sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = cssVar('--chart-muted');
+  Chart.defaults.borderColor = cssVar('--grid-line');
+  Chart.defaults.plugins.legend.display = false;
+  Chart.defaults.plugins.tooltip.rtl = true;
+  Chart.defaults.plugins.tooltip.titleFont = chartFont();
+  Chart.defaults.plugins.tooltip.bodyFont = chartFont();
+  Chart.defaults.plugins.tooltip.backgroundColor = cssVar('--surface');
+  Chart.defaults.plugins.tooltip.titleColor = cssVar('--text-primary');
+  Chart.defaults.plugins.tooltip.bodyColor = cssVar('--text-secondary');
+  Chart.defaults.plugins.tooltip.borderColor = cssVar('--border');
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.displayColors = true;
+  Chart.defaults.plugins.tooltip.boxPadding = 4;
+}
+function gridOpts(){ return { color: cssVar('--grid-line'), drawTicks:false }; }
+function axisTickColor(){ return cssVar('--chart-muted'); }
+
+/* ============================================================
+   KPI grid (static shell + dynamic values)
+   ============================================================ */
+function buildKPIGrid(){
+  var grid = document.getElementById('kpiGrid');
+  var detailBtn = function(key, title, sub, extraCls){
+    return '<button class="card__detail'+(extraCls?' '+extraCls:'')+'" data-detail="'+key+'" data-title="'+title+'" data-sub="'+sub+'"><span>جزئیات</span>' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>';
+  };
+  grid.innerHTML =
+    '<div class="card col-4 kpi-card">' +
+      '<div class="kpi-card__top"><span class="kpi-card__label">مدت پروژه (روز)</span>' + detailBtn('duration','مدت پروژه','توزیع روزهای فعال، غیرفعال و باقی‌مانده پروژه') + '</div>' +
+      '<div class="chart-box" style="height:118px;margin-top:6px"><canvas id="chartDuration"></canvas>' +
+        '<div id="durationCenter" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none"></div>' +
+      '</div>' +
+      '<div class="legend-row" id="legendDuration" style="justify-content:center"></div>' +
+    '</div>' +
+    '<div class="card col-4 kpi-card"><div class="kpi-card__top"><span class="kpi-card__label">شاخص عملکرد هزینه (CPI)</span>' + detailBtn('cpi','شاخص عملکرد هزینه (CPI)','هزینه واقعی پروژه نسبت به هزینه تحقق‌یافته آن') + '</div><div class="card__body" style="padding-top:0"><div class="gauge-row"><div id="gaugeCPI"></div>' +
+      '<div class="gauge-row__caption">هزینه واقعی پروژه نسبت به هزینه تحقق‌یافته آن</div></div></div></div>' +
+    '<div class="card col-4 kpi-card"><div class="kpi-card__top"><span class="kpi-card__label">شاخص عملکرد زمان (SPI)</span>' + detailBtn('spi','شاخص عملکرد زمان (SPI)','پیشرفت تحقق‌یافته نسبت به پیشرفت برنامه‌ای پروژه') + '</div><div class="card__body" style="padding-top:0"><div class="gauge-row"><div id="gaugeSPI"></div>' +
+      '<div class="gauge-row__caption">پیشرفت تحقق‌یافته نسبت به پیشرفت برنامه‌ای پروژه</div></div></div></div>';
+}
+
+function donutChart(canvasId, values, colors){
+  var ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:[], datasets:[{ data:values, backgroundColor:colors, borderWidth:2, borderColor:cssVar('--surface'), hoverOffset:4 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'72%',
+      animation:{ duration:500 },
+      plugins:{ tooltip:{ callbacks:{ label:function(c){ return c.label + ': ' + fmtNum(c.parsed); } } } }
+    }
+  });
+}
+
+function updateKPIs(data){
+  var durVals = [data.duration.active, data.duration.inactive, data.duration.remaining];
+  var durColors = [cssVar('--s3'), cssVar('--text-muted'), cssVar('--s2')];
+  if(chartRegistry.duration){ chartRegistry.duration.data.datasets[0].data = durVals; chartRegistry.duration.update(); }
+  else { chartRegistry.duration = donutChart('chartDuration', durVals, durColors); }
+  document.getElementById('durationCenter').innerHTML = '<div style="font-size:17px;font-weight:800" class="num">'+fmtNum(durVals[0]+durVals[1]+durVals[2])+'</div><div style="font-size:9.5px;color:var(--text-muted);font-weight:700">کل روز</div>';
+  document.getElementById('legendDuration').innerHTML =
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s3)"></span>فعال '+fmtNum(durVals[0])+'</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--text-muted)"></span>غیرفعال '+fmtNum(durVals[1])+'</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s2)"></span>باقیمانده '+fmtNum(durVals[2])+'</span>';
+
+  renderGauge('gaugeCPI', data.cpi, 2, 'CPI');
+  renderGauge('gaugeSPI', data.spi, 2, 'SPI');
+}
+
+/* ============================================================
+   Portfolio overview (Default tab) — aggregate across ALL
+   contracts, rendered once and independent of the combobox
+   ============================================================ */
+function renderPortfolioOverview(){
+  var amounts = BASE.amounts;
+  var totalAmount = amounts.piemankari + amounts.motaleat + amounts.nezarat;
+  document.getElementById('amountTotal').textContent = fmtRial(totalAmount);
+  document.getElementById('kpiTotalAmount').textContent = fmtCompact(totalAmount);
+
+  var amtGroups = [
+    { label:'پیمانکاری', value:amounts.piemankari, color:cssVar('--s1') },
+    { label:'مطالعات', value:amounts.motaleat, color:cssVar('--s3') },
+    { label:'نظارت', value:amounts.nezarat, color:cssVar('--s2') }
+  ];
+  document.getElementById('amountBar').innerHTML = amtGroups.map(function(g){
+    var pct = clamp((g.value/totalAmount)*100, 2, 100);
+    return '<div class="pd-amount-seg" style="width:'+pct+'%;background:'+g.color+'" title="'+g.label+'"></div>';
+  }).join('');
+  document.getElementById('amountLegend').innerHTML = amtGroups.map(function(g){
+    return '<span><i style="background:'+g.color+'"></i>'+g.label+' '+fmtCompact(g.value)+'</span>';
+  }).join('');
+
+  var cs = BASE.contractStatus;
+  var totalContracts = cs.inProgress + cs.draft + cs.finishing + cs.aboutToStart;
+  document.getElementById('kpiTotalContracts').textContent = fmtNum(totalContracts);
+  document.getElementById('kpiActiveContracts').textContent = fmtNum(cs.inProgress);
+
+  var donutStops = [
+    { label:'در جریان', value:cs.inProgress, color:'#ed79bd' },
+    { label:'پیش‌نویس', value:cs.draft, color:'#148ac7' },
+    { label:'اتمام', value:cs.finishing, color:'#8bd8e7' },
+    { label:'آستانه اجرا', value:cs.aboutToStart, color:'#0aa0a4' }
+  ];
+  var acc = 0;
+  var gradParts = donutStops.map(function(s){
+    var from = acc;
+    var pct = totalContracts ? (s.value/totalContracts*100) : 0;
+    acc += pct;
+    return s.color + ' ' + from.toFixed(1) + '% ' + acc.toFixed(1) + '%';
+  });
+  var donutEl = document.getElementById('statusDonut');
+  donutEl.style.background = 'conic-gradient(' + gradParts.join(',') + ')';
+  donutEl.setAttribute('data-total', fmtNum(totalContracts));
+  document.getElementById('statusList').innerHTML = donutStops.map(function(s){
+    return '<div class="pd-status-row"><span><i style="background:'+s.color+'"></i>'+s.label+'</span><b class="num">'+fmtNum(s.value)+'</b></div>';
+  }).join('');
+
+  renderBasket(BASE.basket);
+  renderCities(BASE.provinces);
+}
+
+/* ============================================================
+   Gauge (custom SVG semicircle)
+   ============================================================ */
+function renderGauge(containerId, value, max, label){
+  var v = clamp(value, 0, max);
+  var angle = 180 - (v/max)*180;
+  var rad = angle*Math.PI/180;
+  var cx=100, cy=104, r=76, rNeedle=58;
+  var topX = cx, topY = cy-r;
+  var x0 = cx - r, y0 = cy;
+  var x1 = cx + r, y1 = cy;
+  var nx = cx + rNeedle*Math.cos(rad), ny = cy - rNeedle*Math.sin(rad);
+  var pct = v/max;
+  var color = pct < 0.4 ? cssVar('--critical') : (pct < 0.7 ? cssVar('--warning') : cssVar('--good'));
+  var gid = containerId+'Grad';
+  var svg = '' +
+  '<svg viewBox="0 0 200 128" width="180" height="118">' +
+    '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0%" stop-color="'+cssVar('--critical')+'"/>' +
+      '<stop offset="45%" stop-color="'+cssVar('--warning')+'"/>' +
+      '<stop offset="100%" stop-color="'+cssVar('--good')+'"/>' +
+    '</linearGradient></defs>' +
+    '<path d="M '+x0+' '+y0+' A '+r+' '+r+' 0 0 1 '+topX+' '+topY+'" fill="none" stroke="url(#'+gid+')" stroke-width="14" stroke-linecap="round"/>' +
+    '<path d="M '+topX+' '+topY+' A '+r+' '+r+' 0 0 1 '+x1+' '+y1+'" fill="none" stroke="url(#'+gid+')" stroke-width="14" stroke-linecap="round"/>' +
+    '<line x1="'+cx+'" y1="'+cy+'" x2="'+nx.toFixed(1)+'" y2="'+ny.toFixed(1)+'" stroke="'+cssVar('--text-primary')+'" stroke-width="3" stroke-linecap="round"/>' +
+    '<circle cx="'+cx+'" cy="'+cy+'" r="6.5" fill="'+cssVar('--text-primary')+'"/>' +
+    '<text x="'+x0+'" y="'+(y0+16)+'" font-size="9" fill="'+cssVar('--chart-muted')+'" text-anchor="middle" font-family="Vazirmatn">0</text>' +
+    '<text x="'+x1+'" y="'+(y1+16)+'" font-size="9" fill="'+cssVar('--chart-muted')+'" text-anchor="middle" font-family="Vazirmatn">'+max+'</text>' +
+  '</svg>';
+  document.getElementById(containerId).innerHTML = svg +
+    '<div class="gauge-row__value num" style="color:'+color+'">'+value.toFixed(4)+'</div>' +
+    '<div class="gauge-row__label">'+label+'</div>';
+}
+
+/* ============================================================
+   Financial indicators (bar)
+   ============================================================ */
+function renderFinancial(data){
+  var vals = [data.financial.BCWS, data.financial.BCWP, data.financial.ACWP];
+  if(chartRegistry.financial){
+    chartRegistry.financial.data.datasets[0].data = vals;
+    chartRegistry.financial.update();
+    return;
+  }
+  var ctx = document.getElementById('chartFinancial').getContext('2d');
+  chartRegistry.financial = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:['BCWS','BCWP','ACWP'], datasets:[{ data:vals, backgroundColor:[cssVar('--s1'),cssVar('--s2'),cssVar('--s3')], borderRadius:8, maxBarThickness:46 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{ duration:500 },
+      scales:{
+        x:{ grid:{ display:false }, ticks:{ color: axisTickColor(), font:chartFont() } },
+        y:{ grid: gridOpts(), ticks:{ color: axisTickColor(), font:chartFont(), callback:function(v){ return fmtCompact(v); } } }
+      },
+      plugins:{ tooltip:{ callbacks:{ label:function(c){ return fmtRial(c.parsed.y); } } } }
+    }
+  });
+}
+
+/* ============================================================
+   Physical progress (grouped bar)
+   ============================================================ */
+function renderPhysical(data){
+  var p = data.physical;
+  if(chartRegistry.physical){
+    chartRegistry.physical.data.datasets[0].data = p.planned;
+    chartRegistry.physical.data.datasets[1].data = p.verified;
+    chartRegistry.physical.data.datasets[2].data = p.actual;
+    chartRegistry.physical.update();
+  } else {
+    var ctx = document.getElementById('chartPhysical').getContext('2d');
+    chartRegistry.physical = new Chart(ctx, {
+      type:'bar',
+      data:{ labels:p.categories, datasets:[
+        { label:'برنامه‌ای', data:p.planned, backgroundColor:cssVar('--s1'), borderRadius:6, maxBarThickness:26 },
+        { label:'تحقق‌یافته', data:p.verified, backgroundColor:cssVar('--s2'), borderRadius:6, maxBarThickness:26 },
+        { label:'واقعی', data:p.actual, backgroundColor:cssVar('--s3'), borderRadius:6, maxBarThickness:26 }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:{ duration:500 },
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ color: axisTickColor(), font:chartFont() } },
+          y:{ grid: gridOpts(), max:100, ticks:{ color: axisTickColor(), font:chartFont(), callback:function(v){ return v+'%'; } } }
+        },
+        plugins:{ tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+c.parsed.y+'%'; } } } }
+      }
+    });
+  }
+  document.getElementById('legendPhysical').innerHTML =
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s1)"></span>برنامه‌ای</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s2)"></span>تحقق‌یافته</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s3)"></span>واقعی</span>';
+}
+
+/* ============================================================
+   Human resources (horizontal bar)
+   ============================================================ */
+function renderHR(data){
+  var h = data.hr;
+  var vals = [h.drivers, h.workers, h.security, h.engineers];
+  var total = vals.reduce(function(a,b){return a+b;},0);
+  document.getElementById('hrCaption').textContent = total + ' نفر فعال · میانگین ' + h.avgDuration + ' روز';
+  if(chartRegistry.hr){ chartRegistry.hr.data.datasets[0].data = vals; chartRegistry.hr.update(); return; }
+  var ctx = document.getElementById('chartHR').getContext('2d');
+  chartRegistry.hr = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:['رانندگان','کارگران','حراست','مهندسین'], datasets:[{ data:vals, backgroundColor:[cssVar('--s1'),cssVar('--s3'),cssVar('--s5'),cssVar('--s4')], borderRadius:7, maxBarThickness:22 }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{ duration:500 },
+      scales:{
+        x:{ grid: gridOpts(), ticks:{ color: axisTickColor(), font:chartFont() } },
+        y:{ grid:{ display:false }, ticks:{ color: cssVar('--text-secondary'), font:chartFont() } }
+      },
+      plugins:{ tooltip:{ callbacks:{ label:function(c){ return fmtNum(c.parsed.x) + ' نفر'; } } } }
+    }
+  });
+}
+
+/* ============================================================
+   Equipment (grouped horizontal bar)
+   ============================================================ */
+function renderEquip(data){
+  var e = data.equip;
+  if(chartRegistry.equip){
+    chartRegistry.equip.data.datasets[0].data = e.active;
+    chartRegistry.equip.data.datasets[1].data = e.total;
+    chartRegistry.equip.update();
+  } else {
+    var ctx = document.getElementById('chartEquip').getContext('2d');
+    chartRegistry.equip = new Chart(ctx, {
+      type:'bar',
+      data:{ labels:e.categories, datasets:[
+        { label:'فعال', data:e.active, backgroundColor:cssVar('--s1'), borderRadius:6, maxBarThickness:18 },
+        { label:'کل دستگاه', data:e.total, backgroundColor:cssVar('--s5'), borderRadius:6, maxBarThickness:18 }
+      ]},
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false, animation:{ duration:500 },
+        scales:{
+          x:{ grid: gridOpts(), ticks:{ color: axisTickColor(), font:chartFont() } },
+          y:{ grid:{ display:false }, ticks:{ color: cssVar('--text-secondary'), font:chartFont() } }
+        },
+        plugins:{ tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+fmtNum(c.parsed.x)+' دستگاه'; } } } }
+      }
+    });
+  }
+  document.getElementById('legendEquip').innerHTML =
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s1)"></span>فعال</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s5)"></span>کل دستگاه</span>';
+}
+
+/* ============================================================
+   Rial progress (line + area)
+   ============================================================ */
+function renderRial(data){
+  var r = data.rial;
+  document.getElementById('rialAmount').textContent = fmtRial(r.amount);
+  document.getElementById('rialPercent').textContent = r.percent.toLocaleString('en-US',{maximumFractionDigits:4}) + ' %';
+  if(chartRegistry.rial){ chartRegistry.rial.data.datasets[0].data = r.values; chartRegistry.rial.update(); return; }
+  var ctx = document.getElementById('chartRial').getContext('2d');
+  chartRegistry.rial = new Chart(ctx, {
+    type:'line',
+    data:{ labels:r.dates, datasets:[{ data:r.values, borderColor:cssVar('--s1'), backgroundColor:withAlpha(cssVar('--s1'),'26'), fill:true, tension:.35, pointRadius:[0,0,4], pointBackgroundColor:cssVar('--s1'), pointHoverRadius:5, borderWidth:2.5 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{ duration:500 },
+      scales:{
+        x:{ grid:{ display:false }, ticks:{ color: axisTickColor(), font:chartFont() } },
+        y:{ grid: gridOpts(), ticks:{ color: axisTickColor(), font:chartFont(), callback:function(v){ return v+'%'; } } }
+      },
+      plugins:{ tooltip:{ callbacks:{ label:function(c){ return c.parsed.y + '%'; } } } }
+    }
+  });
+}
+
+/* ============================================================
+   Temperature status (دما) — dual line + band, °C
+   ============================================================ */
+function renderTemperature(data){
+  var c = data.temperature;
+  if(chartRegistry.temp){
+    chartRegistry.temp.data.datasets[0].data = c.min;
+    chartRegistry.temp.data.datasets[1].data = c.max;
+    chartRegistry.temp.update();
+  } else {
+    var ctx = document.getElementById('chartTemp').getContext('2d');
+    chartRegistry.temp = new Chart(ctx, {
+      type:'line',
+      data:{ labels:c.dates, datasets:[
+        { label:'کمینه', data:c.min, borderColor:cssVar('--s1'), backgroundColor:withAlpha(cssVar('--s1'),'20'), tension:.4, pointRadius:3, borderWidth:2, fill:false },
+        { label:'بیشینه', data:c.max, borderColor:cssVar('--s8'), backgroundColor:withAlpha(cssVar('--s8'),'22'), tension:.4, pointRadius:3, borderWidth:2, fill:'-1' }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:{ duration:500 },
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ color: axisTickColor(), font:chartFont() } },
+          y:{ grid: gridOpts(), ticks:{ color: axisTickColor(), font:chartFont(), callback:function(v){ return v+'°'; } } }
+        },
+        plugins:{ tooltip:{ mode:'index', intersect:false, callbacks:{ label:function(cx){ return cx.dataset.label+': '+cx.parsed.y+'°C'; } } } }
+      }
+    });
+  }
+  document.getElementById('legendTemp').innerHTML =
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s1)"></span>کمینه</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s8)"></span>بیشینه</span>';
+}
+
+/* ============================================================
+   S-Curve (wide line chart)
+   ============================================================ */
+function renderScurve(data){
+  var s = data.scurve;
+  if(chartRegistry.scurve){
+    chartRegistry.scurve.data.labels = s.labels;
+    chartRegistry.scurve.data.datasets[0].data = s.planned;
+    chartRegistry.scurve.data.datasets[1].data = s.verified;
+    chartRegistry.scurve.data.datasets[2].data = s.actual;
+    chartRegistry.scurve.update();
+  } else {
+    var ctx = document.getElementById('chartScurve').getContext('2d');
+    chartRegistry.scurve = new Chart(ctx, {
+      type:'line',
+      data:{ labels:s.labels, datasets:[
+        { label:'پیشرفت برنامه‌ای', data:s.planned, borderColor:cssVar('--s1'), backgroundColor:withAlpha(cssVar('--s1'),'18'), fill:true, tension:.3, borderWidth:3, pointRadius:0, pointHoverRadius:4 },
+        { label:'پیشرفت تحقق‌یافته', data:s.verified, borderColor:cssVar('--s2'), tension:.3, borderWidth:2, pointRadius:2, spanGaps:false },
+        { label:'پیشرفت واقعی', data:s.actual, borderColor:cssVar('--s3'), tension:.3, borderWidth:2, pointRadius:2, spanGaps:false }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:{ duration:500 },
+        interaction:{ mode:'index', intersect:false },
+        scales:{
+          x:{ grid:{ display:false }, ticks:{ color: axisTickColor(), font:chartFont(), maxRotation:0, autoSkip:true, maxTicksLimit:8 } },
+          y:{ grid: gridOpts(), min:0, max:105, ticks:{ color: axisTickColor(), font:chartFont(), callback:function(v){ return v+'%'; } } }
+        },
+        plugins:{ tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y+'%'); } } } }
+      }
+    });
+  }
+  document.getElementById('legendScurve').innerHTML =
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s1)"></span>پیشرفت برنامه‌ای</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s2)"></span>پیشرفت تحقق‌یافته</span>' +
+    '<span class="legend-row__item"><span class="legend-row__dot" style="background:var(--s3)"></span>پیشرفت واقعی</span>';
+}
+
+/* ============================================================
+   Deviation tiles (BCWS / BCWP / ACWP + CV / SV)
+   ============================================================ */
+function renderDeviation(data){
+  var f = data.financial;
+  var cv = f.BCWP - f.ACWP;
+  var sv = f.BCWP - f.BCWS;
+  document.getElementById('devTiles').innerHTML =
+    '<div class="dev-tile" style="background:'+cssVar('--s1')+'"><div class="dev-tile__label">BCWS</div><div class="dev-tile__value num">'+fmtCompact(f.BCWS)+'</div></div>' +
+    '<div class="dev-tile" style="background:'+cssVar('--s7')+'"><div class="dev-tile__label">BCWP</div><div class="dev-tile__value num">'+fmtCompact(f.BCWP)+'</div></div>' +
+    '<div class="dev-tile" style="background:'+cssVar('--s5')+'"><div class="dev-tile__label">ACWP</div><div class="dev-tile__value num">'+fmtCompact(f.ACWP)+'</div></div>';
+  document.getElementById('devOutcomes').innerHTML =
+    '<div class="dev-out"><div class="dev-out__label">CV (انحراف هزینه)</div><div class="dev-out__value num '+(cv<0?'is-neg':'is-pos')+'">'+(cv<0?'−':'')+fmtCompact(Math.abs(cv))+'</div></div>' +
+    '<div class="dev-out"><div class="dev-out__label">SV (انحراف زمان)</div><div class="dev-out__value num '+(sv<0?'is-neg':'is-pos')+'">'+(sv<0?'−':'')+fmtCompact(Math.abs(sv))+'</div></div>';
+}
+
+/* ============================================================
+   Basket rows (طرح / پروژه / پیمان)
+   ============================================================ */
+function renderBasket(basket){
+  var max = Math.max.apply(null, basket.map(function(b){return b.total;})) || 1;
+  document.getElementById('basketRows').innerHTML = basket.map(function(b){
+    var pctTotal = clamp((b.total/max)*100, 15, 100);
+    var pctFiltered = b.total ? clamp((b.filtered/b.total)*100, 0, 100) : 0;
+    return '<div class="pd-basket-row">' +
+      '<span class="pd-basket-name">'+b.name+'</span>' +
+      '<div class="pd-basket-track" style="width:'+pctTotal+'%">' +
+        '<div class="pd-basket-fill" style="width:'+pctFiltered+'%;background:'+cssVar('--s5')+'"></div>' +
+        '<div class="pd-basket-fill" style="width:'+(100-pctFiltered)+'%;background:'+cssVar('--s1')+'"></div>' +
+      '</div>' +
+      '<span class="pd-basket-num num">'+b.total+'</span>' +
+    '</div>';
+  }).join('');
+}
+
+/* ============================================================
+   Cities list — replaces the Iran map. Each province/city that has
+   an active plan can be opened directly on Google Maps, pinned at
+   its real coordinates.
+   ============================================================ */
+var CITY_COORDS = {
+  'کرمان':          { lat:30.2839, lng:57.0834, city:'کرمان' },
+  'تهران':          { lat:35.6892, lng:51.3890, city:'تهران' },
+  'فارس':           { lat:29.5918, lng:52.5837, city:'شیراز' },
+  'یزد':            { lat:31.8974, lng:54.3569, city:'یزد' },
+  'آذربایجان‌غربی':  { lat:37.5527, lng:45.0761, city:'ارومیه' },
+  'خراسان جنوبی':    { lat:32.8663, lng:59.2211, city:'بیرجند' },
+  'هرمزگان':        { lat:27.1832, lng:56.2666, city:'بندرعباس' },
+  'اصفهان':         { lat:32.6546, lng:51.6680, city:'اصفهان' }
+};
+function mapsUrl(coord){ return 'https://www.google.com/maps/search/?api=1&query=' + coord.lat + ',' + coord.lng; }
+function renderCities(provinces){
+  var sorted = provinces.slice().sort(function(a,b){ return b.v-a.v; });
+  document.getElementById('citiesCount').textContent = sorted.length + ' شهر';
+  document.getElementById('cityList').innerHTML = sorted.map(function(p){
+    var coord = CITY_COORDS[p.name];
+    var cityLabel = coord ? coord.city : p.name;
+    var nameHTML = p.name + (cityLabel !== p.name ? ' <span style="color:var(--text-muted);font-weight:600">('+cityLabel+')</span>' : '');
+    var mapBtn = coord ?
+      '<a class="pd-city-map" href="'+mapsUrl(coord)+'" target="_blank" rel="noopener" title="نمایش '+cityLabel+' روی نقشه گوگل">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>' +
+        'نمایش روی نقشه' +
+      '</a>' : '';
+    return '<div class="pd-city-row"><span class="pd-city-dot"></span>' +
+      '<span class="pd-city-name">'+nameHTML+'</span>' +
+      '<span class="pd-city-count num">'+p.v+' طرح</span>' +
+      mapBtn +
+    '</div>';
+  }).join('');
+}
+
+/* ============================================================
+   Calendar (کارگاه)
+   ============================================================ */
+var MONTHS = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+var DOW = ['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه'];
+function renderCalendar(data){
+  var monthName = MONTHS[data.monthIndex];
+  document.getElementById('calTitle').textContent = monthName + ' ۱۴۰۱';
+  var offset = data.calOffset;
+  var daysInMonth = data.monthIndex < 6 ? 31 : (data.monthIndex < 11 ? 30 : 29);
+  var html = DOW.map(function(d){ return '<div class="cal__dow">'+d+'</div>'; }).join('');
+  for(var i=0;i<offset;i++){ html += '<div class="cal__cell cal__cell--empty"></div>'; }
+  for(var day=1; day<=daysInMonth; day++){
+    var weekday = (day-1+offset)%7;
+    var cls = 'cal__cell ';
+    if(weekday===6) cls += 'cal__cell--holiday';
+    else if((day + Math.round(data.duration.remaining%5)) % data.calMod === 0) cls += 'cal__cell--half';
+    else cls += 'cal__cell--active';
+    html += '<div class="'+cls+'">'+day.toLocaleString('fa-IR')+'</div>';
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+/* ============================================================
+   Events (issues / obstacles)
+   ============================================================ */
+function eventCardHTML(item){
+  return '<div class="event-card">' +
+    '<div class="event-card__date"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>'+item.date+'</div>' +
+    '<div class="event-card__title">'+item.title+'</div>' +
+    '<div class="event-card__desc">'+item.desc+'</div>' +
+  '</div>';
+}
+function renderEvents(){
+  document.getElementById('issuesList').innerHTML = ISSUES.map(eventCardHTML).join('');
+  document.getElementById('issuesCount').textContent = ISSUES.length;
+  document.getElementById('obstaclesList').innerHTML = OBSTACLES.map(eventCardHTML).join('');
+  document.getElementById('obstaclesCount').textContent = OBSTACLES.length;
+}
+
+/* ============================================================
+   Master render
+   ============================================================ */
+var currentProjectData = null;
+function renderAll(contract){
+  var data = deriveData(contract);
+  currentProjectData = data;
+  document.getElementById('metaClient').textContent = contract.client;
+  document.getElementById('metaCode').textContent = contract.code;
+  updateKPIs(data);
+  renderFinancial(data);
+  renderPhysical(data);
+  renderDeviation(data);
+  renderRial(data);
+  renderHR(data);
+  renderEquip(data);
+  renderTemperature(data);
+  renderScurve(data);
+  renderCalendar(data);
+  document.getElementById('metaUpdated').textContent = 'آخرین به‌روزرسانی: هم‌اکنون';
+}
+
+/* ============================================================
+   Combobox (searchable contract select)
+   ============================================================ */
+var selectedContract = CONTRACTS[0];
+var comboBtn = document.getElementById('comboBtn');
+var comboPanel = document.getElementById('comboPanel');
+var comboSearch = document.getElementById('comboSearch');
+var comboList = document.getElementById('comboList');
+var comboValue = document.getElementById('comboValue');
+var activeIndex = -1;
+var filteredContracts = CONTRACTS.slice();
+
+function statusPillHTML(status){
+  var map = { active:'status-pill--active', paused:'status-pill--paused', draft:'status-pill--draft', finishing:'status-pill--finishing' };
+  return '<span class="status-pill '+map[status]+'">'+STATUS_LABEL[status]+'</span>';
+}
+
+function renderComboList(){
+  if(filteredContracts.length===0){
+    comboList.innerHTML = '<div class="combo__empty">قراردادی با این مشخصات یافت نشد</div>';
+    return;
+  }
+  comboList.innerHTML = filteredContracts.map(function(c, i){
+    var sel = c.id===selectedContract.id;
+    return '<div class="combo__item'+(sel?' is-selected':'')+(i===activeIndex?' is-active':'')+'" data-id="'+c.id+'" role="option">' +
+      '<svg class="combo__item-check" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>' +
+      '<span class="combo__item-main"><div class="combo__item-title">'+c.name+'</div><div class="combo__item-sub">'+c.code+' · '+c.client+'</div></span>' +
+      statusPillHTML(c.status) +
+    '</div>';
+  }).join('');
+}
+
+function openCombo(){
+  comboPanel.classList.add('is-open');
+  comboBtn.classList.add('is-open');
+  comboBtn.setAttribute('aria-expanded','true');
+  comboSearch.value = '';
+  filteredContracts = CONTRACTS.slice();
+  activeIndex = -1;
+  renderComboList();
+  setTimeout(function(){ comboSearch.focus(); }, 10);
+}
+function closeCombo(){
+  comboPanel.classList.remove('is-open');
+  comboBtn.classList.remove('is-open');
+  comboBtn.setAttribute('aria-expanded','false');
+}
+function selectContract(id){
+  var c = CONTRACTS.find(function(x){ return x.id===id; });
+  if(!c) return;
+  selectedContract = c;
+  comboValue.textContent = c.name;
+  closeCombo();
+  renderAll(c);
+}
+
+comboBtn.addEventListener('click', function(){
+  if(comboPanel.classList.contains('is-open')) closeCombo(); else openCombo();
+});
+comboSearch.addEventListener('input', function(){
+  var q = comboSearch.value.trim().toLowerCase();
+  filteredContracts = CONTRACTS.filter(function(c){
+    return c.name.toLowerCase().indexOf(q)>-1 || c.code.toLowerCase().indexOf(q)>-1 || c.client.toLowerCase().indexOf(q)>-1;
+  });
+  activeIndex = -1;
+  renderComboList();
+});
+comboSearch.addEventListener('keydown', function(e){
+  if(e.key==='ArrowDown'){ e.preventDefault(); activeIndex = Math.min(activeIndex+1, filteredContracts.length-1); renderComboList(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); activeIndex = Math.max(activeIndex-1, 0); renderComboList(); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(activeIndex>=0 && filteredContracts[activeIndex]) selectContract(filteredContracts[activeIndex].id); }
+  else if(e.key==='Escape'){ closeCombo(); }
+});
+comboList.addEventListener('click', function(e){
+  var item = e.target.closest('.combo__item');
+  if(item) selectContract(item.getAttribute('data-id'));
+});
+document.addEventListener('click', function(e){
+  if(!document.getElementById('combo').contains(e.target)) closeCombo();
+});
+
+/* refresh + filter buttons */
+document.getElementById('refreshBtn').addEventListener('click', function(){
+  this.classList.add('is-spinning');
+  var self = this;
+  setTimeout(function(){
+    self.classList.remove('is-spinning');
+    if(activeTab==='project'){ renderAll(selectedContract); }
+    else { renderPortfolioOverview(); }
+  }, 350);
+});
+document.getElementById('filterBtn').addEventListener('click', function(){ openCombo(); });
+
+/* ============================================================
+   Tabs
+   ============================================================ */
+var activeTab = 'default';
+var appEl = document.getElementById('app');
+var tabBtnDefault = document.getElementById('tabBtnDefault');
+var tabBtnProject = document.getElementById('tabBtnProject');
+function setTab(tab){
+  activeTab = tab;
+  appEl.classList.toggle('tab-default', tab==='default');
+  appEl.classList.toggle('tab-project', tab==='project');
+  tabBtnDefault.classList.toggle('is-active', tab==='default');
+  tabBtnProject.classList.toggle('is-active', tab==='project');
+  if(tab==='default'){ requestAnimationFrame(fitBoard); }
+}
+tabBtnDefault.addEventListener('click', function(){ setTab('default'); });
+tabBtnProject.addEventListener('click', function(){ setTab('project'); });
+
+/* ============================================================
+   Fit the default dashboard board to the remaining viewport
+   height so it never scrolls the page (only long lists inside
+   a card may scroll internally) — mirrors the real system's own
+   height-fitting behavior for its default dashboard.
+   ============================================================ */
+function fitBoard(){
+  if(activeTab!=='default') return;
+  var panel = document.getElementById('panelDefault');
+  if(!panel) return;
+  if(window.innerWidth <= 1080){ panel.style.height=''; return; }
+  var top = panel.getBoundingClientRect().top;
+  var h = window.innerHeight - top - 14;
+  panel.style.height = Math.max(560, h) + 'px';
+}
+window.addEventListener('resize', fitBoard);
+
+/* ============================================================
+   Hero — greeting, live clock, Jalali date, weather, quote
+   ============================================================ */
+var USER_NAME = 'مهتاب';
+var QUOTES = [
+  'هر روز یک قدم به تکمیل پروژه نزدیک‌تر می‌شویم.',
+  'نظم امروز، کیفیت فرداست.',
+  'بهترین زمان برای پیگیری همین حالاست.',
+  'پیشرفت کوچک هم پیشرفت است؛ ادامه بده.',
+  'با برنامه‌ریزی درست، بزرگ‌ترین پروژه‌ها هم ساده می‌شوند.',
+  'یک تصمیم خوب امروز، از ده تصمیم فردا ارزشمندتر است.'
+];
+function dayOfYear(d){ var start = new Date(d.getFullYear(),0,0); return Math.floor((d-start)/86400000); }
+function greetingWord(hour){
+  if(hour>=5 && hour<12) return 'صبح بخیر';
+  if(hour>=12 && hour<17) return 'ظهر بخیر';
+  if(hour>=17 && hour<21) return 'عصر بخیر';
+  return 'شب بخیر';
+}
+function renderHeroDate(now){
+  var text = '';
+  try{
+    var parts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).formatToParts(now);
+    var byType = {};
+    parts.forEach(function(p){ byType[p.type] = p.value; });
+    text = byType.weekday + '، ' + byType.day + ' ' + byType.month + ' ' + byType.year;
+  }catch(e){
+    try{ text = now.toLocaleDateString('fa-IR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); }
+    catch(e2){ text = now.toDateString(); }
+  }
+  document.getElementById('heroDate').textContent = text;
+}
+function tickClock(){
+  var now = new Date();
+  var t = '';
+  try{ t = now.toLocaleTimeString('fa-IR', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }); }
+  catch(e){ t = now.toLocaleTimeString(); }
+  document.getElementById('heroClock').textContent = t;
+}
+function renderHero(){
+  var now = new Date();
+  document.getElementById('heroGreeting').textContent = greetingWord(now.getHours()) + '، ' + USER_NAME;
+  renderHeroDate(now);
+  tickClock();
+  setInterval(tickClock, 1000);
+  document.getElementById('heroWeatherTemp').textContent = '۳۸°';
+  document.getElementById('heroWeatherDesc').textContent = 'صاف و آفتابی · دبی';
+  document.getElementById('heroQuote').textContent = QUOTES[dayOfYear(now) % QUOTES.length];
+}
+
+/* ============================================================
+   Documents in progress (سندهای در دست اقدام)
+   ============================================================ */
+var DOCS = [
+  { title:'صورت‌وضعیت شماره ۱۴', sub:'احداث خط انتقال آب (PRJ-1044) · ارجاع ۱۴۰۱/۰۲/۱۰', status:'review' },
+  { title:'سند تعدیل', sub:'نیروگاه تولید پراکنده یزد (PRJ-4108) · ارجاع ۱۴۰۱/۰۲/۰۸', status:'pending' },
+  { title:'صورت‌جلسه تحویل موقت', sub:'انبار مرکزی پیمانکاری اصفهان (PRJ-8144) · ارجاع ۱۴۰۱/۰۱/۲۹', status:'fix' },
+  { title:'صورت‌وضعیت قطعی', sub:'نظارت کارگاهی پالایشگاه بندرعباس (PRJ-7212) · ارجاع ۱۴۰۱/۰۱/۲۵', status:'approved' },
+  { title:'سند متمم قرارداد', sub:'خط لوله انتقال گاز فارس (PRJ-3305) · ارجاع ۱۴۰۱/۰۲/۰۱', status:'review' }
+];
+var DOC_STATUS = {
+  review:   { label:'در دست بررسی',    cls:'doc-pill--review' },
+  pending:  { label:'منتظر مشاهده',    cls:'doc-pill--pending' },
+  fix:      { label:'نیاز به اصلاح',   cls:'doc-pill--fix' },
+  approved: { label:'تایید شده',       cls:'doc-pill--approved' }
+};
+function renderDocuments(){
+  document.getElementById('docCaption').textContent = DOCS.length + ' سند';
+  document.getElementById('docList').innerHTML = DOCS.map(function(d){
+    var s = DOC_STATUS[d.status];
+    return '<div class="pd-pending-row">' +
+      '<span class="pd-pending-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path></svg></span>' +
+      '<span class="pd-pending-copy"><b>'+d.title+'</b><small>'+d.sub+'</small></span>' +
+      '<span class="doc-pill pd-pending-pill '+s.cls+'">'+s.label+'</span>' +
+    '</div>';
+  }).join('');
+}
+
+/* ============================================================
+   Today's reminders (فعالیت‌ها و یادآوری‌های امروز) — checkable,
+   remembered per viewer via localStorage (resets daily)
+   ============================================================ */
+var TODOS = [
+  { id:'t1', time:'۰۸:۳۰', title:'بررسی ایمیل‌های کارفرما و پیمانکاران' },
+  { id:'t2', time:'۱۰:۰۰', title:'جلسه هماهنگی پیشرفت با پیمانکار اصلی' },
+  { id:'t3', time:'۱۲:۳۰', title:'پیگیری اخذ مجوز شهرداری' },
+  { id:'t4', time:'۱۴:۰۰', title:'بازبینی صورت‌وضعیت شماره ۱۴' },
+  { id:'t5', time:'۱۶:۳۰', title:'ارسال گزارش هفتگی به کارفرما' }
+];
+function todoStorageKey(){
+  var d = new Date();
+  return 'todo-done-' + d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+function loadDoneSet(){
+  try{ return JSON.parse(localStorage.getItem(todoStorageKey()) || '[]'); }catch(e){ return []; }
+}
+function saveDoneSet(arr){
+  try{ localStorage.setItem(todoStorageKey(), JSON.stringify(arr)); }catch(e){ /* ignore */ }
+}
+var TODO_COLORS = [
+  { bg:'#e8f4ff', color:'#1688c7', icon:'calendar' },
+  { bg:'#fff0f7', color:'#d52b91', icon:'alert' },
+  { bg:'#e9f8f4', color:'#14a58a', icon:'clipboard' }
+];
+function todoIconSVG(kind){
+  if(kind==='alert') return '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>';
+  if(kind==='clipboard') return '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="4" rx="1"></rect><path d="M6 7h12v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7Z"></path></svg>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>';
+}
+function renderTodos(){
+  var done = loadDoneSet();
+  document.getElementById('todoCaption').textContent = done.length + ' از ' + TODOS.length;
+  document.getElementById('todoList').innerHTML = TODOS.map(function(t,i){
+    var isDone = done.indexOf(t.id)>-1;
+    var c = TODO_COLORS[i % TODO_COLORS.length];
+    return '<div class="pd-today-item'+(isDone?' is-done':'')+'" data-id="'+t.id+'" style="--item-bg:'+c.bg+';--item-color:'+c.color+'">' +
+      '<i>'+todoIconSVG(c.icon)+'</i>' +
+      '<p><b>'+t.title+'</b><span class="num">'+t.time+'</span></p>' +
+    '</div>';
+  }).join('');
+  document.getElementById('todoList').querySelectorAll('.pd-today-item').forEach(function(row){
+    row.addEventListener('click', function(){
+      var id = row.getAttribute('data-id');
+      var d = loadDoneSet();
+      var idx = d.indexOf(id);
+      if(idx>-1) d.splice(idx,1); else d.push(id);
+      saveDoneSet(d);
+      renderTodos();
+    });
+  });
+}
+
+/* ============================================================
+   Detail pages — every dashboard item gets a "مشاهده جزئیات"
+   button that opens a dedicated full-screen detail page (with
+   back navigation), instead of just a modal popup.
+   ============================================================ */
+function fillDetailDesc(container, text){
+  var p = el('div','detail-desc'); p.textContent = text; container.appendChild(p);
+}
+function fillDetailStats(container, stats){
+  var wrap = el('div','detail-stat-row');
+  wrap.innerHTML = stats.map(function(s){
+    return '<div class="detail-stat"><span>'+s.label+'</span><b class="num" style="'+(s.color?('color:'+s.color+';'):'')+'">'+s.value+'</b></div>';
+  }).join('');
+  container.appendChild(wrap);
+}
+function fillDetailTable(container, head, rows){
+  var wrap = el('div','detail-table-wrap');
+  wrap.innerHTML = '<table class="detail-table"><thead><tr>'+head.map(function(h){return '<th>'+h+'</th>';}).join('')+
+    '</tr></thead><tbody>'+(rows.length ? rows.map(function(r){ return '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>'; }).join('') : '<tr><td colspan="'+head.length+'" style="text-align:center;color:var(--text-muted)">موردی ثبت نشده است</td></tr>')+'</tbody></table>';
+  container.appendChild(wrap);
+}
+function fillDetailChart(container, canvasId, height){
+  var box = el('div','detail-chart-box'); box.style.height = (height||340)+'px';
+  box.innerHTML = '<canvas id="'+canvasId+'"></canvas>';
+  container.appendChild(box);
+  return box;
+}
+function detailLegend(colors){
+  return { legend:{ display:true, position:'bottom', labels:{ color:cssVar('--text-secondary'), font:chartFont(), usePointStyle:true, boxWidth:8, padding:14 } } };
+}
+
+var DETAIL_RENDERERS = {
+
+  status: function(body){
+    var cs = BASE.contractStatus, total = cs.inProgress+cs.draft+cs.finishing+cs.aboutToStart;
+    fillDetailDesc(body,'توزیع همه قراردادهای سبد بر اساس مرحله فعلی آن‌ها — در جریان، پیش‌نویس، رو به اتمام یا در آستانه اجرا.');
+    fillDetailStats(body,[
+      {label:'در جریان', value:fmtNum(cs.inProgress), color:'#ed79bd'},
+      {label:'پیش‌نویس', value:fmtNum(cs.draft), color:'#148ac7'},
+      {label:'اتمام', value:fmtNum(cs.finishing), color:'#8bd8e7'},
+      {label:'آستانه اجرا', value:fmtNum(cs.aboutToStart), color:'#0aa0a4'},
+      {label:'مجموع قراردادها', value:fmtNum(total)}
+    ]);
+    fillDetailTable(body, ['قرارداد','کد','کارفرما','وضعیت'], CONTRACTS.map(function(c){
+      return [c.name, '<span class="num">'+c.code+'</span>', c.client, STATUS_LABEL[c.status]];
+    }));
+  },
+
+  basket: function(body){
+    fillDetailDesc(body,'مقایسه تعداد کل موجودیت‌های هر سطح از سبد (طرح، پروژه، پیمان) با تعداد موجود در فیلتر جاری.');
+    fillDetailStats(body, BASE.basket.map(function(b){ return {label:b.name, value:fmtNum(b.total)}; }));
+    fillDetailTable(body, ['سطح','تعداد کل','موجود در فیلتر'], BASE.basket.map(function(b){
+      return [b.name, fmtNum(b.total), fmtNum(b.filtered)];
+    }));
+  },
+
+  amount: function(body){
+    var a = BASE.amounts, total = a.piemankari+a.motaleat+a.nezarat;
+    fillDetailDesc(body,'مجموع مبلغ ریالی سبد قراردادها به تفکیک نوع فعالیت.');
+    fillDetailStats(body,[
+      {label:'مجموع کل', value:fmtRial(total)},
+      {label:'پیمانکاری', value:fmtRial(a.piemankari), color:cssVar('--s1')},
+      {label:'مطالعات', value:fmtRial(a.motaleat), color:cssVar('--s3')},
+      {label:'نظارت', value:fmtRial(a.nezarat), color:cssVar('--s2')}
+    ]);
+    fillDetailTable(body, ['نوع فعالیت','مبلغ (ریال)','سهم از کل'], [
+      ['پیمانکاری', '<span class="num">'+fmtNum(a.piemankari)+'</span>', Math.round(a.piemankari/total*100)+'%'],
+      ['مطالعات', '<span class="num">'+fmtNum(a.motaleat)+'</span>', Math.round(a.motaleat/total*100)+'%'],
+      ['نظارت', '<span class="num">'+fmtNum(a.nezarat)+'</span>', Math.round(a.nezarat/total*100)+'%']
+    ]);
+  },
+
+  cities: function(body){
+    fillDetailDesc(body,'تعداد طرح‌های فعال هر استان به همراه شهر مرکز آن. با «نمایش روی نقشه» می‌توانید مکان دقیق را در گوگل‌مپ ببینید.');
+    var sorted = BASE.provinces.slice().sort(function(a,b){return b.v-a.v;});
+    fillDetailTable(body, ['استان','شهر مرکز','تعداد طرح','نقشه'], sorted.map(function(p){
+      var coord = CITY_COORDS[p.name];
+      var link = coord ? '<a href="'+mapsUrl(coord)+'" target="_blank" rel="noopener" style="color:var(--mon-blue,#0073ea);font-weight:700">نمایش روی نقشه</a>' : '—';
+      return [p.name, coord?coord.city:'—', fmtNum(p.v), link];
+    }));
+  },
+
+  pending: function(body){
+    fillDetailDesc(body,'همه اسنادی که برای بررسی یا اقدام شما ارسال شده‌اند.');
+    fillDetailTable(body, ['نوع سند','مربوط به','وضعیت'], DOCS.map(function(d){
+      return [d.title, d.sub, DOC_STATUS[d.status].label];
+    }));
+  },
+
+  today: function(body){
+    var done = loadDoneSet();
+    fillDetailDesc(body,'برنامه شخصی امروز — با کلیک روی هر مورد در داشبورد پیش‌فرض می‌توانید آن را انجام‌شده علامت بزنید.');
+    fillDetailTable(body, ['ساعت','عنوان','وضعیت'], TODOS.map(function(t){
+      return [t.time, t.title, done.indexOf(t.id)>-1 ? 'انجام‌شده' : 'باقی‌مانده'];
+    }));
+  },
+
+  duration: function(body){
+    var d = currentProjectData.duration, total = d.active+d.inactive+d.remaining;
+    fillDetailDesc(body,'تفکیک مدت زمان قرارداد «'+selectedContract.name+'» بر اساس روزهای فعال، غیرفعال و باقی‌مانده.');
+    fillDetailStats(body,[
+      {label:'کل مدت (روز)', value:fmtNum(total)},
+      {label:'فعال', value:fmtNum(d.active), color:cssVar('--s3')},
+      {label:'غیرفعال', value:fmtNum(d.inactive), color:cssVar('--text-muted')},
+      {label:'باقیمانده', value:fmtNum(d.remaining), color:cssVar('--s2')}
+    ]);
+  },
+
+  cpi: function(body){
+    var v = currentProjectData.cpi;
+    var status = v>=1?'مطلوب':(v>=0.9?'قابل قبول':'نیازمند بررسی');
+    var color = v>=1?cssVar('--good'):(v>=0.9?cssVar('--warning'):cssVar('--critical'));
+    fillDetailDesc(body,'شاخص عملکرد هزینه (CPI) نسبت هزینه تحقق‌یافته به هزینه واقعی است. مقدار بالاتر یا مساوی ۱ یعنی هزینه در چارچوب برنامه یا بهتر از آن پیش می‌رود.');
+    fillDetailStats(body,[ {label:'CPI فعلی', value:v.toFixed(4)}, {label:'وضعیت', value:status, color:color} ]);
+  },
+
+  spi: function(body){
+    var v = currentProjectData.spi;
+    var status = v>=1?'جلوتر از برنامه':(v>=0.9?'مطابق برنامه':'عقب‌تر از برنامه');
+    var color = v>=1?cssVar('--good'):(v>=0.9?cssVar('--warning'):cssVar('--critical'));
+    fillDetailDesc(body,'شاخص عملکرد زمان‌بندی (SPI) نسبت پیشرفت تحقق‌یافته به پیشرفت برنامه‌ای است.');
+    fillDetailStats(body,[ {label:'SPI فعلی', value:v.toFixed(4)}, {label:'وضعیت', value:status, color:color} ]);
+  },
+
+  scurve: function(body){
+    var s = currentProjectData.scurve;
+    fillDetailDesc(body,'روند تجمعی پیشرفت برنامه‌ای در برابر پیشرفت تحقق‌یافته و پیشرفت واقعی پروژه در طول دوره‌های گزارش‌دهی.');
+    fillDetailChart(body,'chartScurveDetail',380);
+    new Chart(document.getElementById('chartScurveDetail').getContext('2d'), {
+      type:'line',
+      data:{ labels:s.labels, datasets:[
+        { label:'پیشرفت برنامه‌ای', data:s.planned, borderColor:cssVar('--s1'), backgroundColor:withAlpha(cssVar('--s1'),'22'), fill:true, tension:.3, borderWidth:3, pointRadius:0, pointHoverRadius:5 },
+        { label:'پیشرفت تحقق‌یافته', data:s.verified, borderColor:cssVar('--s2'), tension:.3, borderWidth:2.5, pointRadius:2, spanGaps:false },
+        { label:'پیشرفت واقعی', data:s.actual, borderColor:cssVar('--s3'), tension:.3, borderWidth:2.5, pointRadius:2, spanGaps:false }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        plugins: detailLegend(),
+        scales:{ x:{ grid:{display:false}, ticks:{color:axisTickColor(),font:chartFont(),maxRotation:0,autoSkip:true,maxTicksLimit:10} },
+                 y:{ grid:gridOpts(), min:0, max:105, ticks:{color:axisTickColor(),font:chartFont(),callback:function(v){return v+'%';}} } } }
+    });
+  },
+
+  deviation: function(body){
+    var f = currentProjectData.financial, cv = f.BCWP-f.ACWP, sv = f.BCWP-f.BCWS;
+    fillDetailDesc(body,'مقایسه سه شاخص ارزش کسب‌شده — BCWS (هزینه برنامه‌ای)، BCWP (هزینه تحقق‌یافته) و ACWP (هزینه واقعی) — و انحراف‌های هزینه (CV) و زمان (SV) محاسبه‌شده از آن‌ها.');
+    fillDetailStats(body,[
+      {label:'BCWS', value:fmtRial(f.BCWS), color:cssVar('--s1')},
+      {label:'BCWP', value:fmtRial(f.BCWP), color:cssVar('--s7')},
+      {label:'ACWP', value:fmtRial(f.ACWP), color:cssVar('--s5')},
+      {label:'CV (انحراف هزینه)', value:(cv<0?'−':'')+fmtRial(Math.abs(cv)), color: cv<0?cssVar('--critical'):cssVar('--good')},
+      {label:'SV (انحراف زمان)', value:(sv<0?'−':'')+fmtRial(Math.abs(sv)), color: sv<0?cssVar('--critical'):cssVar('--good')}
+    ]);
+  },
+
+  financial: function(body){
+    var f = currentProjectData.financial;
+    fillDetailDesc(body,'مقایسه مستقیم سه شاخص مالی اصلی پروژه «'+selectedContract.name+'».');
+    fillDetailChart(body,'chartFinancialDetail',320);
+    new Chart(document.getElementById('chartFinancialDetail').getContext('2d'), {
+      type:'bar',
+      data:{ labels:['BCWS','BCWP','ACWP'], datasets:[{ data:[f.BCWS,f.BCWP,f.ACWP], backgroundColor:[cssVar('--s1'),cssVar('--s2'),cssVar('--s3')], borderRadius:10, maxBarThickness:80 }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        scales:{ x:{grid:{display:false},ticks:{color:axisTickColor(),font:chartFont()}}, y:{grid:gridOpts(),ticks:{color:axisTickColor(),font:chartFont(),callback:function(v){return fmtCompact(v);}}} },
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ return fmtRial(c.parsed.y); } } } } }
+    });
+  },
+
+  physical: function(body){
+    var p = currentProjectData.physical;
+    fillDetailDesc(body,'پیشرفت فیزیکی گزارش‌شده به تفکیک دسته‌بندی فعالیت — برنامه‌ای، تحقق‌یافته و واقعی.');
+    fillDetailChart(body,'chartPhysicalDetail',320);
+    new Chart(document.getElementById('chartPhysicalDetail').getContext('2d'), {
+      type:'bar',
+      data:{ labels:p.categories, datasets:[
+        { label:'برنامه‌ای', data:p.planned, backgroundColor:cssVar('--s1'), borderRadius:8, maxBarThickness:40 },
+        { label:'تحقق‌یافته', data:p.verified, backgroundColor:cssVar('--s2'), borderRadius:8, maxBarThickness:40 },
+        { label:'واقعی', data:p.actual, backgroundColor:cssVar('--s3'), borderRadius:8, maxBarThickness:40 }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:detailLegend(),
+        scales:{ x:{grid:{display:false},ticks:{color:axisTickColor(),font:chartFont()}}, y:{grid:gridOpts(),max:100,ticks:{color:axisTickColor(),font:chartFont(),callback:function(v){return v+'%';}}} } }
+    });
+    fillDetailTable(body, ['دسته‌بندی','برنامه‌ای','تحقق‌یافته','واقعی'], p.categories.map(function(c,i){
+      return [c, p.planned[i]+'%', p.verified[i]+'%', p.actual[i]+'%'];
+    }));
+  },
+
+  rial: function(body){
+    var r = currentProjectData.rial;
+    fillDetailDesc(body,'روند درصد پیشرفت ریالی قرارداد در بازه‌های گزارش‌دهی، همراه با مبلغ و درصد نهایی تحقق‌یافته.');
+    fillDetailStats(body,[ {label:'مبلغ پیشرفت ریالی', value:fmtRial(r.amount), color:cssVar('--s1')}, {label:'درصد پیشرفت ریالی', value:r.percent.toLocaleString('en-US',{maximumFractionDigits:4})+' %', color:cssVar('--s3')} ]);
+    fillDetailChart(body,'chartRialDetail',300);
+    new Chart(document.getElementById('chartRialDetail').getContext('2d'), {
+      type:'line',
+      data:{ labels:r.dates, datasets:[{ data:r.values, borderColor:cssVar('--s1'), backgroundColor:withAlpha(cssVar('--s1'),'26'), fill:true, tension:.35, pointRadius:4, pointBackgroundColor:cssVar('--s1'), borderWidth:3 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(c){return c.parsed.y+'%';}}}},
+        scales:{ x:{grid:{display:false},ticks:{color:axisTickColor(),font:chartFont()}}, y:{grid:gridOpts(),ticks:{color:axisTickColor(),font:chartFont(),callback:function(v){return v+'%';}}} } }
+    });
+  },
+
+  hr: function(body){
+    var h = currentProjectData.hr;
+    var vals=[h.drivers,h.workers,h.security,h.engineers], labels=['رانندگان','کارگران','حراست','مهندسین'];
+    fillDetailDesc(body,'ترکیب نیروی انسانی فعال روی «'+selectedContract.name+'» — میانگین مدت حضور '+h.avgDuration+' روز.');
+    fillDetailChart(body,'chartHRDetail',320);
+    new Chart(document.getElementById('chartHRDetail').getContext('2d'), {
+      type:'bar',
+      data:{ labels:labels, datasets:[{ data:vals, backgroundColor:[cssVar('--s1'),cssVar('--s3'),cssVar('--s5'),cssVar('--s4')], borderRadius:8, maxBarThickness:34 }] },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(c){return fmtNum(c.parsed.x)+' نفر';}}}},
+        scales:{ x:{grid:gridOpts(),ticks:{color:axisTickColor(),font:chartFont()}}, y:{grid:{display:false},ticks:{color:cssVar('--text-secondary'),font:chartFont()}} } }
+    });
+    fillDetailTable(body, ['رده شغلی','تعداد نفر'], labels.map(function(l,i){ return [l, fmtNum(vals[i])]; }));
+  },
+
+  equip: function(body){
+    var e = currentProjectData.equip;
+    fillDetailDesc(body,'تعداد ماشین‌آلات فعال در برابر کل دستگاه‌های موجود در کارگاه، به تفکیک نوع تجهیز.');
+    fillDetailChart(body,'chartEquipDetail',320);
+    new Chart(document.getElementById('chartEquipDetail').getContext('2d'), {
+      type:'bar',
+      data:{ labels:e.categories, datasets:[
+        { label:'فعال', data:e.active, backgroundColor:cssVar('--s1'), borderRadius:8, maxBarThickness:28 },
+        { label:'کل دستگاه', data:e.total, backgroundColor:cssVar('--s5'), borderRadius:8, maxBarThickness:28 }
+      ]},
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:detailLegend(),
+        scales:{ x:{grid:gridOpts(),ticks:{color:axisTickColor(),font:chartFont()}}, y:{grid:{display:false},ticks:{color:cssVar('--text-secondary'),font:chartFont()}} } }
+    });
+    fillDetailTable(body, ['نوع تجهیز','فعال','کل دستگاه'], e.categories.map(function(c,i){ return [c, fmtNum(e.active[i]), fmtNum(e.total[i])]; }));
+  },
+
+  calendar: function(body){
+    var d = currentProjectData;
+    var monthName = MONTHS[d.monthIndex];
+    var daysInMonth = d.monthIndex < 6 ? 31 : (d.monthIndex < 11 ? 30 : 29);
+    var active=0, half=0, holiday=0;
+    for(var day=1; day<=daysInMonth; day++){
+      var weekday = (day-1+d.calOffset)%7;
+      if(weekday===6) holiday++;
+      else if((day + Math.round(d.duration.remaining%5)) % d.calMod === 0) half++;
+      else active++;
+    }
+    fillDetailDesc(body,'وضعیت فعالیت کارگاه در ماه '+monthName+' ۱۴۰۱ — روزهای کاری، نیمه‌فعال و تعطیل.');
+    fillDetailStats(body,[
+      {label:'روزهای فعال', value:fmtNum(active), color:cssVar('--good')},
+      {label:'روزهای نیمه‌فعال', value:fmtNum(half), color:cssVar('--warning')},
+      {label:'روزهای تعطیل', value:fmtNum(holiday), color:cssVar('--text-muted')},
+      {label:'مجموع روزهای ماه', value:fmtNum(daysInMonth)}
+    ]);
+  },
+
+  temp: function(body){
+    var c = currentProjectData.temperature;
+    var minAvg = Math.round(c.min.reduce(function(a,b){return a+b;},0)/c.min.length);
+    var maxAvg = Math.round(c.max.reduce(function(a,b){return a+b;},0)/c.max.length);
+    fillDetailDesc(body,'روند دمای کمینه و بیشینه کارگاه در روزهای اخیر (درجه سانتی‌گراد).');
+    fillDetailStats(body,[ {label:'میانگین کمینه', value:minAvg+'°', color:cssVar('--s1')}, {label:'میانگین بیشینه', value:maxAvg+'°', color:cssVar('--s8')} ]);
+    fillDetailChart(body,'chartTempDetail',300);
+    new Chart(document.getElementById('chartTempDetail').getContext('2d'), {
+      type:'line',
+      data:{ labels:c.dates, datasets:[
+        { label:'کمینه', data:c.min, borderColor:cssVar('--s1'), backgroundColor:withAlpha(cssVar('--s1'),'18'), tension:.4, pointRadius:4, borderWidth:2.5, fill:false },
+        { label:'بیشینه', data:c.max, borderColor:cssVar('--s8'), backgroundColor:withAlpha(cssVar('--s8'),'20'), tension:.4, pointRadius:4, borderWidth:2.5, fill:'-1' }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:detailLegend(),
+        scales:{ x:{grid:{display:false},ticks:{color:axisTickColor(),font:chartFont()}}, y:{grid:gridOpts(),ticks:{color:axisTickColor(),font:chartFont(),callback:function(v){return v+'°';}}} } }
+    });
+  },
+
+  events: function(body){
+    fillDetailDesc(body,'آخرین مسائل و موانع ثبت‌شده روی «'+selectedContract.name+'».');
+    fillDetailTable(body, ['نوع','بازه زمانی','عنوان','شرح'], ISSUES.map(function(x){ return ['مسئله', x.date, x.title, x.desc]; })
+      .concat(OBSTACLES.map(function(x){ return ['مانع', x.date, x.title, x.desc]; })));
+  }
+};
+
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('.card__detail');
+  if(btn){ openDetail(btn.getAttribute('data-detail'), btn.getAttribute('data-title'), btn.getAttribute('data-sub')||''); }
+});
+function openDetail(key, title, sub){
+  var view = document.getElementById('detailView');
+  view.hidden = false;
+  document.getElementById('detailTitle').textContent = title || '—';
+  document.getElementById('detailSub').textContent = sub || '';
+  var body = document.getElementById('detailBody');
+  body.innerHTML = '';
+  var renderer = DETAIL_RENDERERS[key];
+  if(renderer){ try{ renderer(body); }catch(err){ body.innerHTML = '<div class="detail-desc">اطلاعاتی برای نمایش موجود نیست.</div>'; } }
+  view.scrollTop = 0;
+  window.scrollTo(0,0);
+  try{ history.pushState({detailKey:key}, '', '#detail-'+key); }catch(e){}
+}
+function closeDetail(){
+  document.getElementById('detailView').hidden = true;
+  if(location.hash.indexOf('#detail-')===0){ try{ history.pushState({}, '', location.pathname+location.search); }catch(e){} }
+}
+document.getElementById('detailBack').addEventListener('click', closeDetail);
+window.addEventListener('popstate', function(e){
+  if(!e.state || !e.state.detailKey) closeDetail();
+});
+window.addEventListener('keydown', function(e){
+  if(e.key==='Escape' && !document.getElementById('detailView').hidden) closeDetail();
+});
+
+/* ============================================================
+   Init
+   ============================================================ */
+function init(){
+  applyChartDefaults();
+  setTab('default');
+  buildKPIGrid();
+  renderEvents();
+  comboValue.textContent = selectedContract.name;
+  renderComboList();
+  renderAll(selectedContract);
+  renderPortfolioOverview();
+  renderHero();
+  renderDocuments();
+  renderTodos();
+  requestAnimationFrame(fitBoard);
+}
+init();
+
+})();
+</script>
+
+</body>
+</html>
