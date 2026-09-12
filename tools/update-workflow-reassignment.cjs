@@ -1,0 +1,12 @@
+const fs=require('fs'),vm=require('vm'),path=require('path');
+const file=path.join(__dirname,'../parameter-v34-login-sharp.html');let h=fs.readFileSync(file,'utf8');
+const m=h.match(/var binary=atob\("([^"]+)"\)/);let packed=Buffer.from(m[1],'base64').toString('utf8');
+const template=packed.match(/<script[^>]*type="__bundler\/template"[^>]*>([\s\S]*?)<\/script>/);let source=JSON.parse(template[1]);
+source=source.replace("['changeUser','تغییر کاربر','Change user'],",'');
+if(!source.includes('window.parameterWorkflowStages='))source=source.replace('  var sharedViewers=',"  window.parameterWorkflowStages={snapshot:function(){return JSON.parse(JSON.stringify(STAGES))},use:function(stages){STAGES=stages}};\n  var sharedViewers=");
+source=source.replace('window.parameterWorkflowStages={snapshot:function(){return JSON.parse(JSON.stringify(STAGES))},use:function(stages){STAGES=stages}};', 'var initialWorkflowStages=JSON.stringify(STAGES);window.parameterWorkflowStages={snapshot:function(){return JSON.parse(initialWorkflowStages)},use:function(stages){STAGES=stages}};');
+packed=packed.replace(template[1],JSON.stringify(source).replace(/<\//g,'<\\/'));h=h.replace(m[1],Buffer.from(packed).toString('base64'));
+const js=fs.readFileSync(path.join(__dirname,'workflow-reassignment.js'),'utf8'),css=fs.readFileSync(path.join(__dirname,'workflow-reassignment.css'),'utf8');new vm.Script(js);
+if(!h.includes('var extraPatchNodes=["parameter-workflow-reassignment-style"'))h=h.replace('var extraPatchNodes=[','var extraPatchNodes=["parameter-workflow-reassignment-style","parameter-workflow-reassignment-script",');
+h=h.replace(/\n<style id="parameter-workflow-reassignment-style">[\s\S]*?<\/style>\s*<script id="parameter-workflow-reassignment-script" type="text\/plain">[\s\S]*?<\/script>\s*$/,'');
+h+='\n<style id="parameter-workflow-reassignment-style">'+css+'</style>\n<script id="parameter-workflow-reassignment-script" type="text/plain">'+js+'</script>\n';fs.writeFileSync(file,h);console.log('Integrated workflow reassignment');
