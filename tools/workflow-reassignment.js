@@ -1,6 +1,6 @@
 (function(){
   'use strict';
-  var storageKey='parameter.workflow-reassignments.v1', records={}, panel=null, current=null, selected=-1, trigger=null;
+  var storageKey='parameter.workflow-reassignments.v1', records={}, panel=null, current=null, trigger=null;
   try{records=JSON.parse(localStorage.getItem(storageKey)||'{}')}catch(e){}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   function persist(next){try{localStorage.setItem(storageKey,JSON.stringify(next));records=next;return true}catch(e){if(window.showToast)showToast('ذخیره تغییر انجام نشد؛ فضای ذخیره‌سازی مرورگر را بررسی کنید.');return false}}
@@ -8,20 +8,30 @@
   function key(row){var ctx=window.planDocsCtx||{};return [ctx.level,ctx.id,row.cells[0].textContent.trim(),row.querySelector('.workflow-version')?.textContent.trim()].join('|')}
   function record(row){var id=key(row);if(!records[id])records[id]={title:row.cells[0].textContent.trim(),stages:window.parameterWorkflowStages.snapshot(),history:[]};return records[id]}
   function users(){var data=window.__parameterDefaultUserData||{};return Object.keys(data).filter(function(k){return k.indexOf('contract-users:')===0}).flatMap(function(k){return data[k]}).filter(function(u){return u[4]==='فعال'}).filter(function(u,i,a){return a.findIndex(function(x){return x[1]===u[1]})===i})}
-  function close(){if(panel){panel.close();panel.remove();panel=null}current=null;selected=-1;if(trigger&&trigger.isConnected)trigger.focus()}
+  function close(){if(panel){panel.close();panel.remove();panel=null}current=null;if(trigger&&trigger.isConnected)trigger.focus()}
+  function sameUser(stage,user){return stage.userId?stage.userId===user[1]:stage.user===user[0]}
   function render(){
-    var r=records[current], stage=r.stages[selected];
-    panel.innerHTML='<header><div><h2 id="wr-title">تغییر کاربر</h2><p>'+esc(r.title)+' · منتشرشده</p></div><button type="button" data-close aria-label="بستن">×</button></header><div class="wr-body"><h3>مراحل گردش کار</h3><p class="wr-note">مرحله را انتخاب کنید؛ برای هر مرحله فقط یک کاربر قرارداد جایگزین می‌شود.</p><div class="wr-stages">'+r.stages.map(function(s,i){return '<button type="button" class="wr-stage '+(i===selected?'selected':'')+'" data-stage="'+i+'" aria-pressed="'+(i===selected)+'" style="--wf-stage-color:'+esc(s.color)+'"><span class="wr-number">'+(i+1).toLocaleString('fa-IR')+'</span><h4>'+esc(s.name)+'</h4><dl><div><dt>نام کاربر</dt><dd>'+esc(s.user)+'</dd></div><div><dt>نقش</dt><dd>'+esc(s.role)+'</dd></div><div><dt>عملیات مجاز</dt><dd>'+esc((s.tags||[]).join('، '))+'</dd></div></dl></button>'}).join('')+'</div>'+(stage?'<section class="wr-picker"><h3>کاربران قرارداد · '+esc(stage.name)+'</h3><p>کاربر فعلی: <strong>'+esc(stage.user)+'</strong></p><div class="wr-users">'+(users().map(function(u){return '<label><input type="radio" name="wr-user" value="'+esc(u[1])+'" '+(u[0]===stage.user?'disabled':'')+'><span><b>'+esc(u[0])+(u[0]===stage.user?' (کاربر فعلی)':'')+'</b><small>'+esc(u[2])+' · '+esc(u[3])+'</small></span></label>'}).join('')||'<p>کاربر فعال مرتبط با قرارداد وجود ندارد.</p>')+'</div></section>':'')+'<section class="wr-history"><h3>تاریخچه جایگزینی کاربران</h3>'+(r.history.length?'<div class="wr-table"><table><thead><tr><th>مرحله</th><th>کاربر قبلی</th><th>کاربر جایگزین</th><th>تاریخ و ساعت تغییر</th></tr></thead><tbody>'+r.history.slice().reverse().map(function(h){return '<tr><td>'+esc(h.stage)+'</td><td>'+esc(h.previous)+'</td><td>'+esc(h.replacement)+'</td><td><time datetime="'+esc(h.at)+'">'+esc(new Date(h.at).toLocaleString('fa-IR'))+'</time></td></tr>'}).join('')+'</tbody></table></div>':'<p class="wr-note">هنوز تغییری ثبت نشده است.</p>')+'</section><p class="wr-result" role="status" aria-live="polite"></p></div><footer><button type="button" data-close>بستن</button><button type="button" class="wr-save" disabled>ثبت تغییر کاربر</button></footer>';
+    var r=records[current], available=users();
+    panel.innerHTML='<header><h2 id="wr-title">تغییر کاربر</h2><button type="button" data-close aria-label="بستن">×</button></header><div class="wr-body"><div class="wr-stages">'+r.stages.map(function(s,i){
+      var last=(r.history||[]).slice().reverse().find(function(h){return h.stageIndex===i}), previous=last?last.previous:s.user;
+      return '<section class="wr-stage" aria-labelledby="wr-stage-'+i+'"><h3 id="wr-stage-'+i+'">'+esc(s.name)+'</h3><div class="wr-person"><span>نام کاربر</span><b>'+esc(previous)+'</b></div><label class="wr-choice"><span>انتخاب کاربر قرارداد</span><select data-stage="'+i+'" aria-label="انتخاب کاربر قرارداد برای '+esc(s.name)+'"><option value="">انتخاب کاربر قرارداد</option>'+available.map(function(u){return '<option value="'+esc(u[1])+'"'+(sameUser(s,u)?' disabled':'')+'>'+esc(u[0])+(sameUser(s,u)?' (کاربر فعلی)':'')+'</option>'}).join('')+'</select></label>'+(last?'<div class="wr-current"><span>کاربر جایگزین فعلی</span><b>'+esc(s.user)+'</b></div>':'')+'</section>';
+    }).join('')+'</div><p class="wr-result" role="status" aria-live="polite"></p></div><footer><button type="button" class="wr-save" disabled>ثبت</button></footer>';
   }
-  function open(row,button){if(!eligible(row))return;close();trigger=button;record(row);current=key(row);selected=-1;panel=document.createElement('dialog');panel.className='wr-drawer';panel.dir='rtl';panel.setAttribute('aria-labelledby','wr-title');document.body.appendChild(panel);render();panel.showModal();panel.querySelector('[data-close]').focus();panel.addEventListener('cancel',function(e){e.preventDefault();close()});panel.addEventListener('click',function(e){
-      if(e.target.closest('[data-close]'))return close();var card=e.target.closest('[data-stage]');if(card){selected=Number(card.dataset.stage);render();panel.querySelector('[data-stage="'+selected+'"]').focus();return}
+  function changes(){return Array.from(panel.querySelectorAll('select[data-stage]')).filter(function(input){return input.value}).map(function(input){return {index:Number(input.dataset.stage),user:users().find(function(u){return u[1]===input.value})}})}
+  function open(row,button){
+    if(!eligible(row))return;close();trigger=button;record(row);current=key(row);panel=document.createElement('dialog');panel.className='wr-drawer';panel.dir='rtl';panel.setAttribute('aria-labelledby','wr-title');document.body.appendChild(panel);render();panel.showModal();panel.querySelector('[data-close]').focus();
+    panel.addEventListener('cancel',function(e){e.preventDefault();close()});
+    panel.addEventListener('click',function(e){
+      if(e.target.closest('[data-close]'))return close();
       if(!e.target.closest('.wr-save'))return;
       if(!row.isConnected||!eligible(row))return close();
-      var input=panel.querySelector('input[name="wr-user"]:checked'), user=input&&users().find(function(u){return u[1]===input.value}), old=records[current].stages[selected];if(!user||!old||user[0]===old.user)return;
-      var next=JSON.parse(JSON.stringify(records)),r=next[current],previous=old.user;
-      r.history.push({stage:old.name,stageIndex:selected,previous:previous,previousId:old.userId||null,replacement:user[0],replacementId:user[1],at:new Date().toISOString()});r.stages[selected].user=user[0];r.stages[selected].userId=user[1];if(!persist(next))return;
-      window.parameterWorkflowStages.use(r.stages);updateFirst(row,r);render();panel.querySelector('.wr-result').textContent=previous+' با '+user[0]+' جایگزین شد.';
-    });panel.addEventListener('change',function(){panel.querySelector('.wr-save').disabled=!panel.querySelector('input[name="wr-user"]:checked')});
+      var updates=changes();if(!updates.length||updates.some(function(change){return !change.user||!records[current].stages[change.index]||sameUser(records[current].stages[change.index],change.user)}))return;
+      var next=JSON.parse(JSON.stringify(records)),r=next[current];r.history=r.history||[];
+      updates.forEach(function(change){var old=r.stages[change.index],user=change.user;r.history.push({stage:old.name,stageIndex:change.index,previous:old.user,previousId:old.userId||null,replacement:user[0],replacementId:user[1],at:new Date().toISOString()});old.user=user[0];old.userId=user[1]});
+      if(!persist(next))return;
+      window.parameterWorkflowStages.use(r.stages);updateFirst(row,r);render();panel.querySelector('.wr-result').textContent='تغییرات ثبت شد.';panel.querySelector('select').focus();
+    });
+    panel.addEventListener('change',function(){panel.querySelector('.wr-save').disabled=!changes().length});
   }
   function updateFirst(row,r){var name=row.querySelector('.workflow-agent b');if(name&&r.stages[0]&&name.textContent!==r.stages[0].user)name.textContent=r.stages[0].user}
   function sync(){
