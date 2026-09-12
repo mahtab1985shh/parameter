@@ -34,11 +34,33 @@
     panel.addEventListener('change',function(){panel.querySelector('.wr-save').disabled=!changes().length});
   }
   function updateFirst(row,r){var name=row.querySelector('.workflow-agent b');if(name&&r.stages[0]&&name.textContent!==r.stages[0].user)name.textContent=r.stages[0].user}
+  function openViewers(row,button){
+    close();trigger=button;var r=record(row);current=key(row);
+    var available=(window.parameterWorkflowViewerUsers||[]).map(function(u){return {id:u[2],name:u[0]+' '+u[1],organization:u[3],role:u[5]}});
+    var draft=JSON.parse(JSON.stringify(r.viewers===undefined?available.slice(0,3):r.viewers)),picking=false,dirty=false;
+    panel=document.createElement('dialog');panel.className='wr-drawer wv-drawer';panel.dir='rtl';panel.setAttribute('aria-labelledby','wv-title');document.body.appendChild(panel);
+    function draw(){
+      panel.innerHTML='<header><h2 id="wv-title">مشاهده‌کنندگان</h2><button type="button" data-close aria-label="بستن">×</button></header><div class="wr-body"><div class="wv-toolbar"><span>'+esc(r.title)+'</span><button type="button" class="wv-add" aria-expanded="'+picking+'">افزودن کاربر</button></div>'+(picking?'<section class="wv-picker" aria-label="انتخاب مشاهده‌کنندگان">'+available.filter(function(u){return !draft.some(function(v){return v.id===u.id})}).map(function(u){return '<label><input type="checkbox" value="'+esc(u.id)+'"><span>'+esc(u.name)+'</span><small>'+esc(u.organization)+'</small></label>'}).join('')+'<button type="button" class="wv-pick">افزودن انتخاب‌شده‌ها</button><button type="button" class="wv-cancel">انصراف</button></section>':'')+'<div class="wv-table"><table><thead><tr><th>نام و نام خانوادگی</th><th>کد ملی (نام کاربری)</th><th>سازمان مرتبط</th><th>نقش</th><th>عملیات</th></tr></thead><tbody>'+draft.map(function(u,i){return '<tr><td>'+esc(u.name)+'</td><td>'+esc(u.id)+'</td><td>'+esc(u.organization)+'</td><td>'+esc(u.role)+'</td><td><button type="button" class="icon-btn danger" data-remove="'+i+'" title="حذف مشاهده‌کننده" aria-label="حذف '+esc(u.name)+'"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></td></tr>'}).join('')+(draft.length?'':'<tr><td colspan="5" class="wv-empty">مشاهده‌کننده‌ای ثبت نشده است.</td></tr>')+'</tbody></table></div><p class="wr-result" role="status" aria-live="polite"></p></div><footer><button type="button" class="wr-save" '+(dirty?'':'disabled')+'>ثبت</button></footer>';
+      if(picking&&!panel.querySelector('.wv-picker input')){panel.querySelector('.wv-picker').insertAdjacentHTML('afterbegin','<p>همه کاربران به فهرست افزوده شده‌اند.</p>');panel.querySelector('.wv-pick').disabled=true}
+    }
+    draw();panel.showModal();panel.querySelector('[data-close]').focus();panel.addEventListener('cancel',function(e){e.preventDefault();close()});
+    panel.addEventListener('click',function(e){
+      if(e.target.closest('[data-close]'))return close();
+      if(e.target.closest('.wv-add')){picking=!picking;draw();return}
+      if(e.target.closest('.wv-cancel')){picking=false;draw();return}
+      if(e.target.closest('.wv-pick')){var ids=Array.from(panel.querySelectorAll('.wv-picker input:checked')).map(function(input){return input.value});if(!ids.length)return;available.forEach(function(u){if(ids.includes(u.id)&&!draft.some(function(v){return v.id===u.id}))draft.push(u)});dirty=true;picking=false;draw();return}
+      var remove=e.target.closest('[data-remove]');if(remove){draft.splice(Number(remove.dataset.remove),1);dirty=true;draw();return}
+      if(!e.target.closest('.wr-save')||!dirty)return;
+      if(!row.isConnected||key(row)!==current)return close();
+      var next=JSON.parse(JSON.stringify(records));next[current].viewers=draft;if(!persist(next))return;dirty=false;draw();panel.querySelector('.wr-result').textContent='مشاهده‌کنندگان ثبت شدند.';
+    });
+  }
   function sync(){
     if(!window.parameterWorkflowStages)return;
-    document.querySelectorAll('#view-workflow .wf-tab').forEach(function(tab){if((tab.getAttribute('onclick')||'').includes('changeUser'))tab.remove()});
+    document.querySelectorAll('#view-workflow .wf-tab').forEach(function(tab){var action=tab.getAttribute('onclick')||'';if(action.includes('changeUser')||(action.includes('viewers')&&window.workflowContext?.kind!=='default'))tab.remove()});
     document.querySelectorAll('#view-plan-docs .parameter-workflow-pane tbody tr').forEach(function(row){
       var actions=row.querySelector('.doc-actions');if(!actions||row.cells.length<6)return;
+      if(!actions.querySelector('.wv-trigger')){var viewerButton=document.createElement('button');viewerButton.type='button';viewerButton.className='icon-btn wv-trigger';viewerButton.title='مشاهده‌کنندگان';viewerButton.setAttribute('aria-label','مشاهده‌کنندگان');viewerButton.innerHTML='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"/></svg>';actions.appendChild(viewerButton);viewerButton.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openViewers(row,viewerButton)})}
       var button=actions.querySelector('.wr-trigger');if(!button){button=document.createElement('button');button.type='button';button.className='wr-trigger';button.title='تغییر کاربر';button.textContent='تغییر کاربر';actions.appendChild(button);button.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();open(row,button)})}
       button.disabled=!eligible(row);button.title=button.disabled?'تغییر کاربر فقط برای گردش‌کار منتشرشده فعال است':'تغییر کاربر';var r=records[key(row)];if(r)updateFirst(row,r);
     });
