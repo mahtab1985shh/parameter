@@ -2,6 +2,7 @@
 'use strict';
 var mode='classic',query='',onlyCritical=false,showLinks=true,zoom=1,selected=null,collapsed=new Set();
 var names={classic:'۱. گانت مهندسی',outline:'۲. گانت سلسله‌مراتبی',focus:'۳. گانت ارتباطی'};
+if(!window.parameterScheduleDesignPreview)names={classic:'گانت مهندسی'};
 var descriptions={classic:'جدول تفصیلی در کنار گانت؛ برای برنامه‌ریزی دقیق و مرور ساختار شکست.',outline:'گروه‌های رنگی و ردیف‌های بازتر؛ برای تشخیص سریع والدها، فرزندان و نقاط عطف.',focus:'تمرکز روی مسیر ارتباط فعالیت‌ها؛ یک فعالیت را انتخاب کنید تا پیش‌نیاز و پس‌نیاز آن برجسته شود.'};
 // Dates are offsets from 1405/07/01. Finish dates are exclusive for nonzero durations.
 var tasks=[
@@ -56,5 +57,22 @@ window.buildScheduleGrid=function(){return '<section class="sg-shell" data-mode=
 document.addEventListener('click',function(e){var shell=e.target.closest('.sg-shell');if(!shell)return;var tab=e.target.closest('[data-sg-tab]');if(tab){mode=tab.dataset.sgTab;render();return}var fold=e.target.closest('[data-fold]');if(fold){var id=+fold.dataset.fold;collapsed.has(id)?collapsed.delete(id):collapsed.add(id);render();var replacement=shell.querySelector('[data-fold="'+id+'"]');if(replacement)replacement.focus();return}var task=e.target.closest('[data-select]');if(task){selected=+task.dataset.select;ancestors(byId.get(selected)).forEach(function(id){collapsed.delete(id)});render();return}if(e.target.closest('[data-clear]')){selected=null;render();return}var all=e.target.closest('[data-expand]');if(all){collapsed=all.dataset.expand==='open'?new Set():new Set(tasks.filter(function(t){return t.kind==='parent'}).map(function(t){return t.id}));render();return}if(e.target.closest('#sg-zoom')){zoom=zoom===1?1.5:1;render();document.getElementById('sg-zoom').innerHTML=tabIcons[0]+(zoom===1?'بزرگ‌نمایی':'نمای فشرده')}});
 document.addEventListener('input',function(e){if(e.target.id==='sg-search'){query=e.target.value.trim().replace(/[۰-۹]/g,function(n){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(n)});render()}});
 document.addEventListener('change',function(e){if(e.target.id==='sg-critical'){onlyCritical=e.target.checked;render()}if(e.target.id==='sg-links-toggle'){showLinks=e.target.checked;render()}});
-document.addEventListener('keydown',function(e){if(!e.target.closest('[data-sg-tab]'))return;var keys=Object.keys(names),i=keys.indexOf(mode);if(e.key==='ArrowLeft')i=(i+1)%3;else if(e.key==='ArrowRight')i=(i+2)%3;else if(e.key==='Home')i=0;else if(e.key==='End')i=2;else return;e.preventDefault();mode=keys[i];render();document.getElementById('sg-tab-'+mode).focus()});
+document.addEventListener('keydown',function(e){if(!e.target.closest('[data-sg-tab]'))return;var keys=Object.keys(names),i=keys.indexOf(mode);if(e.key==='ArrowLeft')i=(i+1)%keys.length;else if(e.key==='ArrowRight')i=(i+keys.length-1)%keys.length;else if(e.key==='Home')i=0;else if(e.key==='End')i=keys.length-1;else return;e.preventDefault();mode=keys[i];render();document.getElementById('sg-tab-'+mode).focus()});
+
+// Route schedule documents from the contract workspace into the selected Gantt.
+var previousDocumentForm=window.openContractDocumentForm;
+window.openContractDocumentForm=function(type,code,viewOnly){
+ if(type==='schedule' && window.currentContractDetailId){
+  window.__scheduleReturnContract=window.currentContractDetailId;
+  window.openScheduleEditor(window.currentContractDetailId,code);
+  window.setScheduleTab('schedule',document.querySelector('[data-se-tab="schedule"]'));
+  return;
+ }
+ if(previousDocumentForm)return previousDocumentForm.apply(this,arguments);
+};
+var previousClose=window.closeScheduleEditor;
+window.closeScheduleEditor=function(){
+ if(window.__scheduleReturnContract){var id=window.__scheduleReturnContract;window.__scheduleReturnContract=null;window.openContractDocuments(id);return;}
+ if(previousClose)return previousClose.apply(this,arguments);
+};
 })();

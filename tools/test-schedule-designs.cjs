@@ -30,7 +30,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),path
  let frame;for(let i=0;i<40;i++){frame=page.frames().find(f=>f.url()==='about:srcdoc');if(frame&&await frame.evaluate(()=>typeof openScheduleEditor==='function'))break;await page.waitForTimeout(200)}
  await frame.evaluate(()=>{openScheduleEditor(CONTRACTS[0].id,'SC-1403-001');setScheduleTab('schedule',document.querySelector('[data-se-tab=schedule]'))});
  assert.equal(await frame.locator('.sg-meta-row').count(),20);assert(await frame.locator('.sg-shell').isVisible());
- await frame.locator('[data-sg-tab=outline]').click();assert.equal(await frame.locator('.sg-link').count(),16);
+ assert.equal(await frame.locator('[data-sg-tab]').count(),1);assert.equal(await frame.locator('.sg-link').count(),16);
+ await frame.evaluate(()=>{openContractDocuments(CONTRACTS[0].id);openContractDocumentForm('schedule','SC-1403-001',true)});assert(await frame.locator('.sg-shell').isVisible());
+ await frame.evaluate(()=>closeScheduleEditor());assert(await frame.locator('#cv-body').isVisible());
  await page.screenshot({path:path.resolve(__dirname,'../../tmp/schedule-integrated-v2.png'),fullPage:true});
  console.log('PASS: three Gantt views, 5 parents/5 milestones/10 children, 16 dependency arrows, selection, hierarchy collapse, search retaining ancestors, critical filter, link toggle, zoom, keyboard, mobile, app integration');
  }finally{await browser.close()}
