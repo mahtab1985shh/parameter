@@ -10,7 +10,7 @@
     ['ادمین', ['سازمان‌ها', 'پرسنل', 'نقش و دسترسی‌ها', 'کاربران', 'کاربران محدود', 'دسترسی به سازمان‌ها', 'مشخصات شرکت', 'نشست‌های فعال', 'تنظیمات امنیتی']]
   ];
   const productTabs = [['ماژول‌ها', 'تعرفه‌ها'], ['آیتم‌ها', 'سرویس‌ها']];
-  const iconColors=['#00C6AE','#00C6AE','#00C6AE','#00C6AE','#00C6AE','#4D49FF','#00C6AE'];
+  const iconColors=['#fdab3d','#00a67e','#e65783','#1688df','#ef9142','#985bcb','#00a99d'];
   const iconPaths=[
     '<path d="m12 3 9 5-9 5-9-5 9-5Zm-9 5v9l9 5 9-5V8M12 13v9"/>',
     '<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"/>',
@@ -54,7 +54,7 @@
     const parameterBrand=shell.querySelector('#header-parameter-brand');
     if(parameterBrand){parameterBrand.textContent='پنل ادمین پارامتر';parameterBrand.setAttribute('aria-label','پنل ادمین پارامتر');parameterBrand.style.setProperty('font-size','18px','important');parameterBrand.style.setProperty('font-weight','800','important');parameterBrand.style.setProperty('color','#fff','important')}
     const workspace=shell.querySelector('.workspace-trigger');
-    workspace.innerHTML='<span class="workspace-mark">P</span><span>پنل ادمین پارامتر</span>';workspace.disabled=true;
+    workspace.innerHTML='<span class="workspace-mark">P</span><span>فضای کاری</span>';workspace.disabled=true;
     const brand=shell.querySelector('.header-company-brand');if(brand){
       brand.innerHTML='<img class="admin-company-logo" alt="لوگوی ماهان وب گستر آویژه" width="48" height="42"><strong class="admin-company-name">شرکت ماهان وب گستر آویژه</strong>';
       brand.querySelector('img').src=new URL('assets/mahan-brand-mark.svg',document.baseURI).href;
@@ -83,14 +83,14 @@
       @media(max-width:760px){html body .app-shell{display:flex!important}html body .sidebar{display:flex!important;position:relative!important;transform:none!important;width:185px!important;min-width:185px!important}html body .main-wrap{min-width:0;flex:1}html body .group-tabs{flex-wrap:wrap}.admin-toolbar{flex-wrap:wrap}.board-wrap{overflow:auto}}
     `;
     shell.querySelectorAll('.admin-colored-icon').forEach(n=>{
-      const color=n.closest('.sidebar')?'#ffffff':'#4D49FF';
+      const color=iconColors[Array.from(shell.querySelectorAll('.admin-colored-icon')).indexOf(n)%iconColors.length];
       n.style.setProperty('color',color,'important');
       if(n.closest('.sidebar'))n.style.setProperty('background','transparent','important');
       n.style.setProperty('stroke',color,'important');
       n.querySelectorAll('*').forEach(p=>{p.style.setProperty('stroke',color,'important');p.style.setProperty('fill','none','important')});
     });
-    shell.querySelectorAll('.sidebar .sidebar-item,.sidebar .sidebar-item span,.sidebar-user-name,.topbar span,.topbar button').forEach(n=>n.style.setProperty('color','#ffffff','important'));
-    shell.querySelectorAll('.topbar svg,.topbar svg *').forEach(n=>n.style.setProperty('stroke','#ffffff','important'));
+    shell.querySelectorAll('.sidebar .sidebar-item,.sidebar .sidebar-item span,.sidebar-user-name,.topbar span,.topbar button').forEach(n=>n.style.setProperty('color','#111111','important'));
+    shell.querySelectorAll('.topbar svg,.topbar svg *').forEach(n=>n.style.setProperty('stroke','#111111','important'));
     const purpleStyles=`
       html:root{--mon-blue:#4D49FF!important;--mon-blue-dark:#3531B8!important;--mon-blue-tint:#EAF8F6!important;--mon-green:#4D49FF!important;--mon-green-tint:#EAF8F6!important;--bg:#F5F9FB;--surface:#fff;--border:#DCE8EC;--text-900:#242540;--text-600:#697C88;--ds-header-start:#3531B8;--ds-header-end:#00C6AE;--ds-table-head:#EAF8F6;--ds-border:#DCE8EC}
       html body{background:#F5F9FB!important;color:#242540!important}
@@ -127,7 +127,15 @@
       html body .parameter-base-subitem:hover,html body .parameter-base-subitem.active{background:#EAF8F6!important;color:#4D49FF!important}
       html body .parameter-base-information-submenu{border-color:#DCE8EC!important;box-shadow:0 12px 32px #24254014!important}
     `;
-    frame.srcdoc='<!doctype html><html lang="fa" dir="rtl" translate="no" class="notranslate" data-theme="light"><head><meta charset="utf-8"><meta name="google" content="notranslate"><meta name="viewport" content="width=device-width,initial-scale=1">'+styles+'<style>'+css+purpleStyles+'</style></head><body>'+shell.outerHTML+'</body></html>';
+    const finalStyles=`
+      html body .topbar.parameter-header,html body .topbar.parameter-header *,html body .sidebar .sidebar-item,html body .sidebar .sidebar-item span,html body .sidebar-user-name,html body .admin-company-name,html body #header-parameter-brand,html body #admin-exit{color:#111!important}
+      html body .sidebar .sidebar-item .admin-colored-icon{background:#ffffffdd!important;border-radius:8px!important}
+      html body .related-label{display:inline-flex!important;align-items:center;justify-content:center;white-space:nowrap;border:1px solid #cbdde8!important;background:#eaf8f6!important;color:#244b64!important;border-radius:7px!important;padding:7px 12px!important;font:inherit!important;cursor:pointer;box-shadow:none!important}
+      html body .related-label:hover{background:#d4f2ec!important}
+      html body .related-label:focus-visible{outline:2px solid #4D49FF;outline-offset:2px}
+      html body .admin-table .pmc-inline-tools,html body .admin-table .pmc-inline-filter,html body .admin-table .th-tools,html body .admin-table .th-search-row{display:none!important}
+    `;
+    frame.srcdoc='<!doctype html><html lang="fa" dir="rtl" translate="no" class="notranslate" data-theme="light"><head><meta charset="utf-8"><meta name="google" content="notranslate"><meta name="viewport" content="width=device-width,initial-scale=1">'+styles+'<style>'+css+purpleStyles+finalStyles+'</style></head><body>'+shell.outerHTML+'</body></html>';
     frame.onload=()=>{
       const d=frame.contentDocument;
       d.getElementById('admin-exit').onclick=()=>{frame.remove();document.querySelector('.login-admin-trigger')?.focus()};
