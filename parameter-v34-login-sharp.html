@@ -5662,8 +5662,8 @@ html.rp-rtl :is(.num,.ltr-num,[class*="amount"],[class*="price"],[class*="code"]
     shell.classList.add('notranslate');
     const header=shell.querySelector('.topbar.parameter-header');
     const sidebar=shell.querySelector('.sidebar');
-    header.style.setProperty('background','linear-gradient(100deg, #57305A, #754173 55%, #8A4B83)','important');
-    sidebar.style.setProperty('background','linear-gradient(180deg, #57305A 0%, #70406F 52%, #7A3E78 100%)','important');
+    header.style.setProperty('background','linear-gradient(to left, #00C6AE 0%, #4D49FF 100%)','important');
+    sidebar.style.setProperty('background','linear-gradient(to bottom, #00C6AE 0%, #4D49FF 100%)','important');
     shell.querySelector('.content').innerHTML = '<div id="admin-content"></div>';
     shell.querySelector('.sidebar-nav').innerHTML = groups.map((g, i) => '<div class="parameter-base-information-host"><button type="button" class="sidebar-item parameter-base-information-trigger" data-group="'+i+'" aria-expanded="false" aria-controls="admin-menu-'+i+'">'+menuIcon(i)+'<span>'+g[0]+'</span></button></div>').join('');
     groups.forEach((g,i)=>{
@@ -5677,7 +5677,10 @@ html.rp-rtl :is(.num,.ltr-num,[class*="amount"],[class*="price"],[class*="code"]
     shell.querySelectorAll('.workspace-popover,.header-language-dropdown,.user-popover,.header-notification,.theme-compact-btn,.header-language-menu').forEach(n=>n.remove());
     const workspace=shell.querySelector('.workspace-trigger');
     workspace.innerHTML='<span class="workspace-mark">P</span><span>پنل ادمین پارامتر</span>';workspace.disabled=true;
-    const brand=shell.querySelector('.header-company-brand');if(brand)brand.innerHTML='<strong class="admin-company-name">شرکت ماهان وب گستر آویژه</strong>';
+    const brand=shell.querySelector('.header-company-brand');if(brand){
+      brand.innerHTML='<img class="admin-company-logo" alt="لوگوی ماهان وب گستر آویژه" width="48" height="42"><strong class="admin-company-name">شرکت ماهان وب گستر آویژه</strong>';
+      brand.querySelector('img').src=new URL('assets/mahan-brand-mark.svg',document.baseURI).href;
+    }
     const footer=shell.querySelector('.sidebar-footer');
     if(footer)footer.insertAdjacentHTML('beforeend','<button type="button" id="admin-exit" title="خروج از پنل ادمین">خروج</button>');
     const user=shell.querySelector('.sidebar-user-name');if(user)user.textContent='مدیر سامانه';
@@ -5715,6 +5718,8 @@ html.rp-rtl :is(.num,.ltr-num,[class*="amount"],[class*="price"],[class*="code"]
       html body{background:#F8F7FA!important;color:#211B2B!important}
       html body .main-wrap,html body .content{background:#F8F7FA!important}
       html body .admin-company-name{font-size:16px;line-height:1.8;color:#fff!important;white-space:normal;text-align:center}
+      html body .header-company-brand{display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important}
+      html body .admin-company-logo{display:block!important;width:48px!important;height:42px!important;object-fit:contain!important;flex-shrink:0;background:#fff;border-radius:8px;padding:4px;box-sizing:border-box}
       html body #admin-exit{min-width:0!important;width:100%!important;padding:0 6px!important;background:#ffffff18!important}
       html body .workspace-trigger{background:#ffffff18!important;border-color:#ffffff30!important;color:white!important;opacity:1!important}
       html body .workspace-mark{background:#ffffff25!important;color:white!important}
