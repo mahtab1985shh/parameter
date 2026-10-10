@@ -38,8 +38,8 @@
     shell.classList.add('notranslate');
     const header=shell.querySelector('.topbar.parameter-header');
     const sidebar=shell.querySelector('.sidebar');
-    header.style.setProperty('background','linear-gradient(to left, #E4E4FF 0%, #9997FF 100%)','important');
-    sidebar.style.setProperty('background','linear-gradient(to bottom, #E4E4FF 0%, #9997FF 100%)','important');
+    header.style.setProperty('background','linear-gradient(to left, color-mix(in srgb, #4D49FF 45%, white) 0%, #4D49FF 100%)','important');
+    sidebar.style.setProperty('background','linear-gradient(to bottom, color-mix(in srgb, #4D49FF 45%, white) 0%, #4D49FF 100%)','important');
     shell.querySelector('.content').innerHTML = '<div id="admin-content"></div>';
     shell.querySelector('.sidebar-nav').innerHTML = groups.map((g, i) => '<div class="parameter-base-information-host"><button type="button" class="sidebar-item parameter-base-information-trigger" data-group="'+i+'" aria-expanded="false" aria-controls="admin-menu-'+i+'">'+menuIcon(i)+'<span>'+g[0]+'</span></button></div>').join('');
     groups.forEach((g,i)=>{
@@ -64,8 +64,8 @@
     const user=shell.querySelector('.sidebar-user-name');if(user)user.textContent='مدیر سامانه';
     const frame=document.createElement('iframe');frame.id='parameter-admin-frame';frame.title='پنل ادمین پارامتر';frame.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:white';
     const css=`
-      :root{--mon-blue:#4D49FF;--mon-blue-dark:#3531B8;--mon-blue-tint:#EAF8F6;--sidebar-bg:#B8B6FF;--sidebar-bg-dark:#9997FF;--sidebar-bg-light:#E4E4FF;--ui-grad-start:#E4E4FF;--ui-grad-mid:#B8B6FF;--ui-grad-end:#9997FF}
-      :root{--admin-purple-light:#E4E4FF;--admin-purple-deep:#9997FF}
+      :root{--mon-blue:#4D49FF;--mon-blue-dark:#3531B8;--mon-blue-tint:#EAF8F6;--sidebar-bg:color-mix(in srgb, #4D49FF 70%, white);--sidebar-bg-dark:#4D49FF;--sidebar-bg-light:color-mix(in srgb, #4D49FF 45%, white);--ui-grad-start:color-mix(in srgb, #4D49FF 45%, white);--ui-grad-mid:color-mix(in srgb, #4D49FF 70%, white);--ui-grad-end:#4D49FF}
+      :root{--admin-purple-light:color-mix(in srgb, #4D49FF 45%, white);--admin-purple-deep:#4D49FF}
       html body .topbar.parameter-header{background:linear-gradient(to left,var(--admin-purple-light) 0%,var(--admin-purple-light) 16%,var(--admin-purple-deep) 100%)!important;color:white!important;border-bottom:0!important;box-shadow:none!important}
       html body .sidebar{background:linear-gradient(to bottom,var(--admin-purple-light) 0%,var(--admin-purple-deep) 100%)!important;border-top:0!important}
       html body .sidebar-nav,html body .sidebar-footer{background:transparent!important}
@@ -92,7 +92,7 @@
     shell.querySelectorAll('.sidebar .sidebar-item,.sidebar .sidebar-item span,.sidebar-user-name,.topbar span,.topbar button').forEach(n=>n.style.setProperty('color','#111111','important'));
     shell.querySelectorAll('.topbar svg,.topbar svg *').forEach(n=>n.style.setProperty('stroke','#111111','important'));
     const purpleStyles=`
-      html:root{--mon-blue:#4D49FF!important;--mon-blue-dark:#3531B8!important;--mon-blue-tint:#EAF8F6!important;--mon-green:#4D49FF!important;--mon-green-tint:#EAF8F6!important;--bg:#F5F9FB;--surface:#fff;--border:#DCE8EC;--text-900:#242540;--text-600:#697C88;--ds-header-start:#E4E4FF;--ds-header-end:#9997FF;--ds-table-head:#EAF8F6;--ds-border:#DCE8EC}
+      html:root{--mon-blue:#4D49FF!important;--mon-blue-dark:#3531B8!important;--mon-blue-tint:#EAF8F6!important;--mon-green:#4D49FF!important;--mon-green-tint:#EAF8F6!important;--bg:#F5F9FB;--surface:#fff;--border:#DCE8EC;--text-900:#242540;--text-600:#697C88;--ds-header-start:color-mix(in srgb, #4D49FF 45%, white);--ds-header-end:#4D49FF;--ds-table-head:#EAF8F6;--ds-border:#DCE8EC}
       html body{background:#F5F9FB!important;color:#242540!important}
       html body .main-wrap,html body .content{background:#F5F9FB!important}
       html body .admin-company-name{font-size:16px;line-height:1.8;color:#fff!important;white-space:normal;text-align:center}
