@@ -1,0 +1,85 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright');
+const root = path.join(__dirname, '..');
+(async () => {
+  const html = fs.readFileSync(path.join(root, 'parameter-v34-login-sharp.html'), 'utf8');
+  for (const name of ['admin-shell','admin-customers','admin-leads']) {
+    const inline = html.match(new RegExp('<script id="parameter-'+name+'-inline">([\\s\\S]*?)</script>'));
+    assert(inline, name+' inline missing');
+    assert.equal(inline[1].replace(/\r/g,'').trim(),fs.readFileSync(path.join(__dirname,name+'.js'),'utf8').replace(/\r/g,'').trim());
+  }
+  const browser = await chromium.launch({channel:'chrome', headless:true});
+  try {
+    const page = await browser.newPage({viewport:{width:1920,height:1080}});
+    const errors=[];page.on('pageerror', e=>errors.push(e.message));
+    // Isolated fixture: no real app data or network requests are used by this test.
+    await page.route('https://admin-fixture.test/**',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html dir="rtl" lang="fa"><head><style>body{margin:20px;background:#f5f9fb;font:13px Tahoma;color:#242540}.group-tabs{display:flex;gap:8px;padding:12px 0}.group-tab{padding:9px 14px;border:1px solid #dce8ec;border-radius:10px;background:white;color:#4d49ff;display:flex;align-items:center;gap:8px}.group-tab.active{background:#4d49ff;color:white}.admin-toolbar{display:flex;align-items:center;background:white;padding:12px;border:1px solid #dce8ec;border-radius:12px}.admin-toolbar input{padding:10px;border:1px solid #dce8ec;border-radius:8px}.board-wrap{overflow:auto;background:white;border:1px solid #dce8ec;border-radius:12px}.admin-table{width:100%;border-collapse:collapse;text-align:right}.admin-table th{background:#eaf8f6;color:#3531b8;padding:14px}.admin-table td{padding:12px;border-bottom:1px solid #e9edf2}.admin-empty{text-align:center;padding:40px!important}#page-title{background:white;border:1px solid #dce8ec;border-radius:10px;padding:16px;font-size:18px}</style></head><body><h1 id="page-title"></h1><div class="breadcrumb"></div><main id="admin-content"></main></body></html>'}));
+    await page.goto('https://admin-fixture.test/');
+    await page.addScriptTag({path:path.join(__dirname,'admin-customers.js')});
+    await page.addScriptTag({path:path.join(__dirname,'admin-leads.js')});
+    await page.evaluate(()=>window.parameterAdminLeads(document,()=>window.parameterAdminCustomers(document,0)));
+    const count=()=>page.locator('tbody tr[data-row]').count();
+    assert.equal(await count(),7);
+    assert.equal(await page.locator('.leads-kpi').count(),4);
+    assert.equal(await page.locator('[data-free]').getAttribute('aria-pressed'),'false');
+    await page.locator('[data-free]').click(); assert.equal(await count(),3);
+    assert.equal(await page.locator('.leads-free').count(),3);
+    await page.getByRole('searchbox').fill('موسوی');assert.equal(await count(),1);
+    await page.getByRole('searchbox').fill('هیچ نتیجه‌ای');assert.equal(await count(),0);
+    assert.match(await page.locator('tbody').innerText(),/کاربر رایگانی/);
+    await page.getByRole('searchbox').fill('');
+    await page.locator('[data-free]').click();assert.equal(await count(),7);
+    await page.locator('[data-select-all]').check();assert.equal(await page.locator('tbody input:checked').count(),7);
+    await page.locator('[data-free]').click();assert.equal(await page.locator('tbody input:checked').count(),0);
+    await page.locator('[data-free]').click();
+    await page.screenshot({path:path.join(root,'..','output','admin-leads-preview.png'),fullPage:true});
+    await page.locator('[data-create]').click();
+    await page.locator('[name=organization]').fill('شرکت تست رایگان');
+    await page.locator('[name=contact]').fill('رابط تست');
+    await page.locator('[name=accountType]').selectOption('free');
+    await page.locator('dialog button[type=submit]').click();
+    let stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('parameter.admin.leads.v1')));
+    assert.equal(stored.length,8);assert.equal(stored[0].accountType,'free');
+    const id=stored[0].id;
+    await page.locator('[data-free]').click();assert.equal(await count(),4);
+    await page.locator('[data-action=edit][data-id="'+id+'"]').click();
+    await page.locator('[name=organization]').fill('شرکت تست ویرایش‌شده');
+    await page.locator('dialog button[type=submit]').click();
+    assert.match(await page.locator('tbody').innerText(),/ویرایش‌شده/);
+    await page.locator('[data-action=more][data-id="'+id+'"]').click();
+    await page.screenshot({path:path.join(root,'..','output','admin-leads-actions-preview.png'),fullPage:true});
+    await page.locator('[data-more=activity]').click();await page.locator('dialog textarea').fill('پیگیری آزمایشی');await page.locator('dialog button[type=submit]').click();
+    await page.locator('[data-action=swap][data-id="'+id+'"]').click();await page.locator('dialog button[type=submit]').click();
+    const customer=await page.evaluate(()=>JSON.parse(localStorage.getItem('parameter.admin.customers.v1')));
+    assert(customer.companies.some(r=>r.id==='lead-customer-'+id));
+    assert.equal(customer['lead-customer-'+id+':colleagues'][0].values[0],'رابط تست');
+    await page.locator('[data-customers]').click();
+    await page.getByRole('tab',{name:'اشخاص حقوقی'}).click();
+    assert.match(await page.locator('tbody').innerText(),/شرکت تست ویرایش‌شده/);
+    await page.evaluate(()=>window.parameterAdminLeads(document,()=>{}));
+    await page.getByRole('searchbox').fill('شرکت تست');
+    await page.locator('[data-action=delete]').click();await page.locator('dialog button[type=submit]').click();assert.equal(await count(),0);
+    await page.getByRole('searchbox').fill('');
+    await page.locator('[data-import]').click();
+    await page.locator('dialog textarea').fill('سازمان وارداتی\tعلی\t000\tپارامتر ابری\tرایگان');
+    await page.locator('dialog button[type=submit]').click();
+    await page.locator('[data-free]').click();assert.equal(await count(),4);
+    // Inspect the actual CSV Blob without relying on host download policies.
+    await page.evaluate(()=>{const original=URL.createObjectURL;URL.createObjectURL=blob=>{window.exportedCsv=blob;return original(blob)};HTMLAnchorElement.prototype.click=function(){window.exportedFilename=this.download;};});
+    await page.locator('[data-export]').click();
+    const exported=await page.evaluate(()=>window.exportedCsv.text());assert.equal(await page.evaluate(()=>window.exportedFilename),'parameter-leads.csv');assert(exported.includes('سازمان وارداتی'));assert(!exported.includes('آرمان سازه'));
+    await page.evaluate(()=>window.parameterAdminLeads(document,()=>{}));
+    assert.equal(await page.locator('[data-pages] [aria-current=page]').innerText(),'۱');
+    await page.getByRole('button',{name:'صفحه بعد'}).click();assert.equal(await count(),1);
+    await page.setViewportSize({width:760,height:900});
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.evaluate(()=>localStorage.setItem('parameter.admin.leads.v1','broken-json'));
+    await page.evaluate(()=>window.parameterAdminLeads(document,()=>{}));
+    assert.match(await page.locator('[role=alert]').innerText(),/خوانده نشد/);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('parameter.admin.leads.v1')),'broken-json');
+    assert.deepEqual(errors,[]);
+    console.log('PASS: inline sync, KPIs, free-only toggle, combined search, empty state, selection, create/edit/delete, activity, customer conversion + live refresh, import, filtered CSV export, pagination; browser console clean.');
+  } finally { await browser.close(); }
+})().catch(e=>{console.error(e);process.exitCode=1;});
