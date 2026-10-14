@@ -5582,9 +5582,9 @@ function install(doc){if(!doc||!doc.documentElement||doc.defaultView?.frameEleme
   function remove(record){const dialog=d.createElement('dialog');dialog.innerHTML='<p>«'+esc(record.values[0])+'» حذف شود؟</p><button type="button" data-cancel>انصراف</button> <button type="button" data-delete>حذف</button><p role="alert"></p>';d.body.appendChild(dialog);dialog.onclose=()=>dialog.remove();dialog.querySelector('[data-cancel]').onclick=()=>dialog.close();dialog.querySelector('[data-delete]').onclick=()=>{const next=structuredClone(data);next[key()]=(next[key()]||[]).filter(r=>r.id!==record.id);if(!save(next)){dialog.querySelector('[role=alert]').textContent='حذف ذخیره نشد.';return}dialog.close();render()};dialog.showModal()}
   function render(){
    const cfg=config(),cols=fields[cfg.keys[tab]],isPeople=page===0&&!related;
-   d.querySelector('#page-title').textContent=related?'فرم‌های مرتبط — '+related.values.slice(0,related.kind==='people'?2:1).join(' '):page===0?'اشخاص و شرکت‌ها':'مشترکین سایت';
-   d.querySelector('.breadcrumb').textContent='پنل ادمین / مشتریان / '+(page===0?'اشخاص و شرکت‌ها':'مشترکین سایت')+(related?' / فرم‌های مرتبط':'')+' / '+cfg.names[tab];
-   host.innerHTML=(related?'<button class="customer-back" data-back>← بازگشت به اشخاص و شرکت‌ها</button>':'')+'<div class="group-tabs" role="tablist">'+cfg.names.map((n,i)=>'<button class="group-tab '+(i===tab?'active':'')+'" role="tab" aria-selected="'+(i===tab)+'" data-customer-tab="'+i+'"><span class="parameter-tab-icon">'+icon('related')+'</span>'+n+'</button>').join('')+'</div><div class="admin-toolbar"><button class="customer-create" data-create>+ ایجاد</button><input type="search" aria-label="جستجو" placeholder="جستجو…" value="'+esc(query)+'"><small data-count></small></div><div class="customer-table-wrap board-wrap"><table class="admin-table"><thead><tr><th>ردیف</th>'+cols.map(c=>'<th>'+c+'</th>').join('')+(isPeople?'<th>فرم‌های مرتبط</th>':'')+'<th>عملیات</th></tr></thead><tbody></tbody></table></div><p class="customer-note">نمونهٔ طراحی؛ اطلاعات در همین مرورگر ذخیره می‌شود.</p>';
+   d.querySelector('#page-title').textContent=related?'فرم‌های مرتبط — '+related.values.slice(0,related.kind==='people'?2:1).join(' '):page===0?'مشتریان سازمانی':'مشتریان ابری';
+   d.querySelector('.breadcrumb').textContent='پنل ادمین / مشتریان / '+(page===0?'مشتریان سازمانی':'مشتریان ابری')+(related?' / فرم‌های مرتبط':'')+' / '+cfg.names[tab];
+   host.innerHTML=(related?'<button class="customer-back" data-back>← بازگشت به مشتریان سازمانی</button>':'')+'<div class="group-tabs" role="tablist">'+cfg.names.map((n,i)=>'<button class="group-tab '+(i===tab?'active':'')+'" role="tab" aria-selected="'+(i===tab)+'" data-customer-tab="'+i+'"><span class="parameter-tab-icon">'+icon('related')+'</span>'+n+'</button>').join('')+'</div><div class="admin-toolbar"><button class="customer-create" data-create>+ ایجاد</button><input type="search" aria-label="جستجو" placeholder="جستجو…" value="'+esc(query)+'"><small data-count></small></div><div class="customer-table-wrap board-wrap"><table class="admin-table"><thead><tr><th>ردیف</th>'+cols.map(c=>'<th>'+c+'</th>').join('')+(isPeople?'<th>فرم‌های مرتبط</th>':'')+'<th>عملیات</th></tr></thead><tbody></tbody></table></div><p class="customer-note">نمونهٔ طراحی؛ اطلاعات در همین مرورگر ذخیره می‌شود.</p>';
    function rows(){const records=(data[key()]||[]).filter(r=>r.values.join(' ').includes(query));host.querySelector('[data-count]').textContent=records.length+' مورد';host.querySelector('tbody').innerHTML=records.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+r.values.map(v=>'<td>'+esc(v)+'</td>').join('')+(isPeople?'<td><button class="related-label" data-action="related" data-id="'+esc(r.id)+'" title="فرم‌های مرتبط" aria-label="فرم‌های مرتبط">فرم‌های مرتبط</button></td>':'')+'<td><div class="customer-actions">'+[['view','مشاهده'],['edit','ویرایش'],['delete','حذف']].map(([a,n])=>'<button class="customer-icon" data-action="'+a+'" data-id="'+esc(r.id)+'" title="'+n+'" aria-label="'+n+'">'+icon(a)+'</button>').join('')+'</div></td></tr>').join('')||'<tr><td colspan="'+(cols.length+(isPeople?3:2))+'" class="admin-empty">اطلاعاتی برای نمایش وجود ندارد.</td></tr>';}
    host.querySelectorAll('[data-customer-tab]').forEach(b=>b.onclick=()=>{tab=+b.dataset.customerTab;query='';render()});host.querySelector('[data-create]').onclick=()=>editor(null,'edit');host.querySelector('input[type=search]').oninput=e=>{query=e.target.value;rows()};host.querySelector('[data-back]')?.addEventListener('click',()=>{tab=related.kind==='people'?0:1;related=null;query='';render()});
    host.querySelector('tbody').onclick=e=>{const b=e.target.closest('[data-action]');if(!b)return;const record=(data[key()]||[]).find(r=>r.id===b.dataset.id);if(!record)return;if(b.dataset.action==='related'){related={...record,kind:cfg.keys[tab]};tab=0;query='';render()}else if(b.dataset.action==='delete')remove(record);else editor(record,b.dataset.action)};rows();
@@ -5627,11 +5627,11 @@ function install(doc){if(!doc||!doc.documentElement||doc.defaultView?.frameEleme
   'use strict';
   const groups = [
     ['داشبورد', ['داشبورد']],
-    ['محصولات', ['قیمت‌گذاری', 'پلن‌های فروش']],
-    ['مشتریان', ['اشخاص و شرکت‌ها', 'مشترکین سایت']],
-    ['فروش', ['قرارداد فروش']],
+    ['محصولات', ['قیمت‌گذاری و تعرفه‌ها', 'سرویس‌های ابری']],
+    ['لیدها', ['لیدها']],
+    ['مشتریان', ['مشتریان سازمانی', 'مشتریان ابری']],
     ['پشتیبانی', ['تیکت‌ها']],
-    ['ادمین', ['سازمان‌ها', 'پرسنل', 'نقش و دسترسی‌ها', 'کاربران', 'کاربران محدود', 'دسترسی به سازمان‌ها', 'مشخصات شرکت', 'نشست‌های فعال', 'تنظیمات امنیتی']]
+    ['مدیر سیستم', ['سازمان‌ها', 'پرسنل', 'نقش و دسترسی‌ها', 'کاربران', 'کاربران محدود', 'دسترسی به سازمان‌ها', 'مشخصات شرکت', 'نشست‌های فعال', 'تنظیمات امنیتی']]
   ];
   const productTabs = [['ماژول‌ها', 'تعرفه‌ها'], ['آیتم‌ها', 'سرویس‌ها']];
   const iconColors=['#fdab3d','#00a67e','#e65783','#1688df','#ef9142','#985bcb','#00a99d'];
@@ -5776,8 +5776,8 @@ function install(doc){if(!doc||!doc.documentElement||doc.defaultView?.frameEleme
         d.querySelector('.breadcrumb').textContent='پنل ادمین / '+groups[i][0]+' / '+(i===1?groups[i][1][j]+' / ':'')+label;
         d.querySelectorAll('[data-group]').forEach(n=>n.classList.toggle('current',+n.dataset.group===i));
         d.querySelectorAll('[data-page]').forEach(n=>n.classList.toggle('active',n.dataset.page===i+':'+j));
-        if(i===2){window.parameterAdminCustomers(d,j);return}
-        if(i===0||i===3){window.parameterAdminSales(d,i===0,()=>select(3,0));return}
+        if(i===3){window.parameterAdminCustomers(d,j);return}
+        if(i===0){window.parameterAdminSales(d,true,()=>window.parameterAdminSales(d,false));return}
         d.getElementById('admin-content').innerHTML='<div class="group-tabs" role="tablist">'+tabs.map((t,k)=>'<button class="group-tab '+(k===selected?'active':'')+'" role="tab" aria-selected="'+(k===selected)+'" data-tab="'+k+'"><span class="parameter-tab-icon">'+svg+'</span>'+t+'</button>').join('')+'</div><div class="admin-toolbar"><input type="search" aria-label="جستجو در '+label+'" placeholder="جستجو در '+label+'…"><small>۰ مورد</small></div><div class="board-wrap"><table class="admin-table"><thead><tr><th>ردیف</th><th>عنوان</th><th>وضعیت</th><th>آخرین تغییر</th></tr></thead><tbody><tr><td colspan="4" class="admin-empty">اطلاعاتی برای نمایش وجود ندارد.</td></tr></tbody></table><div class="admin-footer">تعداد ردیف‌ها: ۰</div></div>';
         d.querySelectorAll('[data-tab]').forEach(n=>n.onclick=()=>i===1?select(i,j,+n.dataset.tab):select(i,+n.dataset.tab));
         d.querySelector('input[type=search]').oninput=e=>{d.querySelector('.admin-empty').textContent=e.target.value?'نتیجه‌ای یافت نشد.':'اطلاعاتی برای نمایش وجود ندارد.'};

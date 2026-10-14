@@ -3,11 +3,11 @@
   'use strict';
   const groups = [
     ['داشبورد', ['داشبورد']],
-    ['محصولات', ['قیمت‌گذاری', 'پلن‌های فروش']],
-    ['مشتریان', ['اشخاص و شرکت‌ها', 'مشترکین سایت']],
-    ['فروش', ['قرارداد فروش']],
+    ['محصولات', ['قیمت‌گذاری و تعرفه‌ها', 'سرویس‌های ابری']],
+    ['لیدها', ['لیدها']],
+    ['مشتریان', ['مشتریان سازمانی', 'مشتریان ابری']],
     ['پشتیبانی', ['تیکت‌ها']],
-    ['ادمین', ['سازمان‌ها', 'پرسنل', 'نقش و دسترسی‌ها', 'کاربران', 'کاربران محدود', 'دسترسی به سازمان‌ها', 'مشخصات شرکت', 'نشست‌های فعال', 'تنظیمات امنیتی']]
+    ['مدیر سیستم', ['سازمان‌ها', 'پرسنل', 'نقش و دسترسی‌ها', 'کاربران', 'کاربران محدود', 'دسترسی به سازمان‌ها', 'مشخصات شرکت', 'نشست‌های فعال', 'تنظیمات امنیتی']]
   ];
   const productTabs = [['ماژول‌ها', 'تعرفه‌ها'], ['آیتم‌ها', 'سرویس‌ها']];
   const iconColors=['#fdab3d','#00a67e','#e65783','#1688df','#ef9142','#985bcb','#00a99d'];
@@ -152,8 +152,8 @@
         d.querySelector('.breadcrumb').textContent='پنل ادمین / '+groups[i][0]+' / '+(i===1?groups[i][1][j]+' / ':'')+label;
         d.querySelectorAll('[data-group]').forEach(n=>n.classList.toggle('current',+n.dataset.group===i));
         d.querySelectorAll('[data-page]').forEach(n=>n.classList.toggle('active',n.dataset.page===i+':'+j));
-        if(i===2){window.parameterAdminCustomers(d,j);return}
-        if(i===0||i===3){window.parameterAdminSales(d,i===0,()=>select(3,0));return}
+        if(i===3){window.parameterAdminCustomers(d,j);return}
+        if(i===0){window.parameterAdminSales(d,true,()=>window.parameterAdminSales(d,false));return}
         d.getElementById('admin-content').innerHTML='<div class="group-tabs" role="tablist">'+tabs.map((t,k)=>'<button class="group-tab '+(k===selected?'active':'')+'" role="tab" aria-selected="'+(k===selected)+'" data-tab="'+k+'"><span class="parameter-tab-icon">'+svg+'</span>'+t+'</button>').join('')+'</div><div class="admin-toolbar"><input type="search" aria-label="جستجو در '+label+'" placeholder="جستجو در '+label+'…"><small>۰ مورد</small></div><div class="board-wrap"><table class="admin-table"><thead><tr><th>ردیف</th><th>عنوان</th><th>وضعیت</th><th>آخرین تغییر</th></tr></thead><tbody><tr><td colspan="4" class="admin-empty">اطلاعاتی برای نمایش وجود ندارد.</td></tr></tbody></table><div class="admin-footer">تعداد ردیف‌ها: ۰</div></div>';
         d.querySelectorAll('[data-tab]').forEach(n=>n.onclick=()=>i===1?select(i,j,+n.dataset.tab):select(i,+n.dataset.tab));
         d.querySelector('input[type=search]').oninput=e=>{d.querySelector('.admin-empty').textContent=e.target.value?'نتیجه‌ای یافت نشد.':'اطلاعاتی برای نمایش وجود ندارد.'};
