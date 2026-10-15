@@ -5815,7 +5815,7 @@ function install(doc){if(!doc||!doc.documentElement||doc.defaultView?.frameEleme
       const shown=matches.slice((page-1)*size,page*size);
       
       host.querySelectorAll('[data-category]').forEach(b=>{const active=b.dataset.category===activeCategory;b.setAttribute('aria-selected',String(active));b.classList.toggle('active',active)});
-      host.querySelector('tbody').innerHTML=shown.map((r,i)=>'<tr data-row="'+esc(r.id)+'" class="'+(selected.has(r.id)?'is-selected':'')+'"><td><input type="checkbox" data-select="'+esc(r.id)+'" aria-label="انتخاب '+esc(r.organization)+'" '+(selected.has(r.id)?'checked':'')+'></td><td>'+fa((page-1)*size+i+1)+'</td>'+(activeCategory==='companies'?companyCells(r):'<td class="leads-company"><strong>'+esc(r.organization)+'</strong><small>'+esc(r.industry||'—')+'</small></td><td class="leads-contact">'+esc(r.contact||'—')+'<small>'+esc([r.role,r.phone].filter(Boolean).join(' · ')||'—')+'</small></td><td class="leads-source">'+esc(r.source||'—')+'<small>'+esc(r.campaign||'بدون کمپین')+'</small></td><td><span class="leads-chip leads-product">'+esc(r.product)+'</span>'+(r.accountType==='free'?'<small class="leads-free">کاربر رایگان</small>':'')+'</td><td><span class="leads-score leads-score-'+scores.indexOf(r.score)+'">● '+esc(r.score)+'</span></td><td><span class="leads-chip leads-status-'+statuses.indexOf(r.status)+'">● '+esc(r.status)+'</span></td><td class="leads-owner"><span class="leads-avatar">'+esc((r.owner||'؟').replace('مهندس ','').slice(0,1))+'</span>'+esc(r.owner||'تعیین نشده')+'</td><td><span class="'+(r.due&&r.due<today()&&!['تبدیل‌شده','رد شده'].includes(r.status)?'leads-overdue':'')+'">'+dateText(r.due)+'</span><small>'+esc(r.nextAction||'—')+'</small></td><td>'+dateText(r.created)+'</td>')+'<td><div class="leads-actions">'+[['view','مشاهده'],['edit','ویرایش'],['delete','حذف'],['swap','تبدیل'],['more','عملیات بیشتر']].map(([a,label])=>'<button class="leads-icon '+(a==='swap'?'leads-convert':'')+'" type="button" data-action="'+a+'" data-id="'+esc(r.id)+'" title="'+label+'" aria-label="'+label+' '+esc(r.organization)+'">'+icon(a)+(a==='swap'?'تبدیل':'')+'</button>').join('')+'</div></td></tr>').join('')||'<tr><td colspan="'+(tableTitles().length+1)+'" class="admin-empty">'+('در گروه '+categories.find(c=>c[0]===activeCategory)[1]+' لیدی ثبت نشده است.')+'</td></tr>';
+      host.querySelector('tbody').innerHTML=shown.map((r,i)=>'<tr data-row="'+esc(r.id)+'" class="'+(selected.has(r.id)?'is-selected':'')+'"><td><input type="checkbox" data-select="'+esc(r.id)+'" aria-label="انتخاب '+esc(r.organization)+'" '+(selected.has(r.id)?'checked':'')+'></td><td>'+fa((page-1)*size+i+1)+'</td>'+(activeCategory==='companies'?companyCells(r):'<td class="leads-company"><strong>'+esc(r.organization)+'</strong><small>'+esc(r.industry||'—')+'</small></td><td class="leads-contact">'+esc(r.contact||'—')+'<small>'+esc([r.role,r.phone].filter(Boolean).join(' · ')||'—')+'</small></td><td class="leads-source">'+esc(r.source||'—')+'<small>'+esc(r.campaign||'بدون کمپین')+'</small></td><td><span class="leads-chip leads-product">'+esc(r.product)+'</span>'+(r.accountType==='free'?'<small class="leads-free">کاربر رایگان</small>':'')+'</td><td><span class="leads-score leads-score-'+scores.indexOf(r.score)+'">● '+esc(r.score)+'</span></td><td><span class="leads-chip leads-status-'+statuses.indexOf(r.status)+'">● '+esc(r.status)+'</span></td><td class="leads-owner"><span class="leads-avatar">'+esc((r.owner||'؟').replace('مهندس ','').slice(0,1))+'</span>'+esc(r.owner||'تعیین نشده')+'</td><td><span class="'+(r.due&&r.due<today()&&!['تبدیل‌شده','رد شده'].includes(r.status)?'leads-overdue':'')+'">'+dateText(r.due)+'</span><small>'+esc(r.nextAction||'—')+'</small></td><td>'+dateText(r.created)+'</td>')+'<td><div class="leads-actions">'+[['view','مشاهده'],['edit','ویرایش'],['delete','حذف'],['swap','تبدیل به مشتری'],['related','فرم‌های مرتبط']].map(([a,label])=>'<button class="'+(a==='related'?'leads-button related-label':'leads-icon')+'" type="button" data-action="'+a+'" data-id="'+esc(r.id)+'" title="'+label+'" aria-label="'+label+' '+esc(r.organization)+'">'+(a==='related'?'فرم‌های مرتبط':icon(a))+'</button>').join('')+'</div></td></tr>').join('')||'<tr><td colspan="'+(tableTitles().length+1)+'" class="admin-empty">'+('در گروه '+categories.find(c=>c[0]===activeCategory)[1]+' لیدی ثبت نشده است.')+'</td></tr>';
       const all=host.querySelector('[data-select-all]');all.checked=shown.length>0&&shown.every(r=>selected.has(r.id));all.indeterminate=shown.some(r=>selected.has(r.id))&&!all.checked;all.disabled=!shown.length;
       host.querySelector('[data-range]').textContent='نمایش '+(matches.length?fa((page-1)*size+1)+'–'+fa(Math.min(page*size,matches.length)):'۰')+' از '+fa(matches.length)+' لید · '+fa(selected.size)+' مورد انتخاب‌شده';
       const pageNumbers=[...new Set([1,page-1,page,page+1,pages])].filter(p=>p>0&&p<=pages).sort((a,b)=>a-b);
@@ -5823,8 +5823,48 @@ function install(doc){if(!doc||!doc.documentElement||doc.defaultView?.frameEleme
       host.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{page=Number(b.dataset.page);paintRows()});
       host.querySelectorAll('[data-select]').forEach(b=>b.onchange=()=>{b.checked?selected.add(b.dataset.select):selected.delete(b.dataset.select);paintRows()});
       all.onchange=()=>{shown.forEach(r=>all.checked?selected.add(r.id):selected.delete(r.id));paintRows()};
-      host.querySelector('tbody').onclick=e=>{const b=e.target.closest('[data-action]');if(!b)return;const r=rows.find(r=>r.id===b.dataset.id);if(!r)return;({view,edit:editor,delete:remove,swap:convert,more})[b.dataset.action](r,b)};
+      host.querySelector('tbody').onclick=e=>{const b=e.target.closest('[data-action]');if(!b)return;const r=rows.find(r=>r.id===b.dataset.id);if(!r)return;({view,edit:editor,delete:remove,swap:convert,related:relatedPage})[b.dataset.action](r,b)};
     }
+
+    function relatedPage(record, selectedTab=0) {
+      if(typeof selectedTab!=='number')selectedTab=0;
+      const r=rows.find(item=>item.id===record.id);
+      if(!r){render();return;}
+      const tabs=['اطلاعات کلی','اقدامات','اشخاص مرتبط','درخواست‌های مشتری','موانع و مشکلات'];
+      const schemas={
+        1:[['title','عنوان اقدام'],['owner','مسئول'],['due','تاریخ پیگیری'],['status','وضعیت'],['notes','توضیحات']],
+        2:[['name','نام و نام خانوادگی'],['role','سمت'],['phone','تلفن'],['email','ایمیل']],
+        3:[['title','عنوان درخواست'],['date','تاریخ درخواست'],['status','وضعیت'],['notes','توضیحات']],
+        4:[['title','عنوان مانع / مشکل'],['owner','مسئول پیگیری'],['status','وضعیت'],['notes','توضیحات']]
+      };
+      const key=['','actions','people','requests','issues'][selectedTab];
+      d.querySelector('#page-title').textContent='فرم‌های مرتبط — '+r.organization;
+      d.querySelector('.breadcrumb').textContent='پنل ادمین / لیدها / '+r.organization+' / '+tabs[selectedTab];
+      host.innerHTML='<button type="button" class="leads-button" data-related-back>بازگشت به لیدها</button><div class="group-tabs" role="tablist" aria-label="فرم‌های مرتبط">'+tabs.map((label,i)=>'<button type="button" role="tab" aria-selected="'+(i===selectedTab)+'" class="group-tab '+(i===selectedTab?'active':'')+'" data-related-tab="'+i+'"><span class="parameter-tab-icon">'+icon('people')+'</span>'+label+'</button>').join('')+'</div><div data-related-content></div><p class="leads-note" data-notice role="status">اطلاعات این صفحه فقط به همین لید مربوط است و در همین مرورگر ذخیره می‌شود.</p>';
+      host.querySelector('[data-related-back]').onclick=render;
+      host.querySelectorAll('[data-related-tab]').forEach(b=>b.onclick=()=>relatedPage(r,Number(b.dataset.relatedTab)));
+      const content=host.querySelector('[data-related-content]');
+      if(selectedTab===0){
+        const fields=categoryOf(r)==='companies'?companyFields:formFields;
+        const pairs=[...fields.map(([k,label])=>[label,k==='due'?dateText(r[k]):r[k]]),['محصول',r.product],['وضعیت',r.status],['تاریخ ثبت',dateText(r.created)]];
+        content.innerHTML='<div class="board-wrap"><table class="admin-table"><thead><tr><th>عنوان</th><th>اطلاعات</th></tr></thead><tbody>'+pairs.map(([label,value])=>'<tr><td>'+label+'</td><td>'+esc(value??'—')+'</td></tr>').join('')+'</tbody></table></div>';
+        return;
+      }
+      const fields=schemas[selectedTab], entries=r.relatedForms?.[key]||[];
+      function saveEntries(next){return update(r,{relatedForms:{...r.relatedForms,[key]:next}});}
+      function editEntry(entry){
+        const dialog=modal((entry?'ویرایش':'ثبت')+' — '+tabs[selectedTab],'<form><div class="leads-fields">'+fields.map(([k,label],i)=>'<label>'+label+'<input name="'+k+'" type="'+(['date','due'].includes(k)?'date':k==='email'?'email':'text')+'" value="'+esc(entry?.[k]??'')+'" maxlength="1000" '+(i===0?'required':'')+'></label>').join('')+'</div>'+footer()+'</form>');
+        dialog.querySelector('form').onsubmit=e=>{e.preventDefault();const item={id:entry?.id||crypto.randomUUID()};fields.forEach(([k])=>item[k]=dialog.querySelector('[name='+k+']').value.trim());if(!item[fields[0][0]])return;if(!saveEntries(entry?entries.map(x=>x.id===entry.id?item:x):[...entries,item])){dialog.querySelector('[role=alert]').textContent='ذخیره انجام نشد.';return;}dialog.close();relatedPage(r,selectedTab);};
+      }
+      content.innerHTML='<div class="admin-toolbar leads-toolbar" style="justify-content:flex-end"><button class="leads-button primary" data-related-create>＋ ثبت '+tabs[selectedTab]+'</button></div><div class="board-wrap"><table class="admin-table"><thead><tr><th>ردیف</th>'+fields.map(([,label])=>'<th>'+label+'</th>').join('')+'<th>عملیات</th></tr></thead><tbody>'+entries.map((item,i)=>'<tr><td>'+fa(i+1)+'</td>'+fields.map(([k])=>'<td>'+esc(['date','due'].includes(k)?dateText(item[k]):item[k]||'—')+'</td>').join('')+'<td><button class="leads-icon" title="ویرایش" aria-label="ویرایش" data-related-edit="'+esc(item.id)+'">'+icon('edit')+'</button><button class="leads-icon" title="حذف" aria-label="حذف" data-related-delete="'+esc(item.id)+'">'+icon('delete')+'</button></td></tr>').join('')+(entries.length?'':'<tr><td class="admin-empty" colspan="'+(fields.length+2)+'">اطلاعاتی برای نمایش وجود ندارد.</td></tr>')+'</tbody></table></div>';
+      content.querySelector('[data-related-create]').onclick=()=>editEntry();
+      content.querySelectorAll('[data-related-edit]').forEach(b=>b.onclick=()=>editEntry(entries.find(x=>x.id===b.dataset.relatedEdit)));
+      content.querySelectorAll('[data-related-delete]').forEach(b=>b.onclick=()=>{
+        const dialog=modal('حذف رکورد','<p>این رکورد حذف شود؟</p><form>'+footer('حذف')+'</form>');
+        dialog.querySelector('form').onsubmit=e=>{e.preventDefault();if(saveEntries(entries.filter(x=>x.id!==b.dataset.relatedDelete))){dialog.close();relatedPage(r,selectedTab);}else dialog.querySelector('[role=alert]').textContent='حذف انجام نشد.';};
+      });
+    }
+
     function render() {
       const month=new Date().toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'}), monthly=rows.filter(r=>new Date(r.created+'T12:00:00Z').toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'})===month).length;
       const pending=rows.filter(r=>!['تبدیل‌شده','رد شده'].includes(r.status)),due=pending.filter(r=>r.due===today()).length,overdue=pending.filter(r=>r.due&&r.due<today()).length,converted=rows.filter(r=>r.status==='تبدیل‌شده').length;
