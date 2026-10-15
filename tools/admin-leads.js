@@ -200,6 +200,49 @@
       host.querySelector('tbody').onclick=e=>{const b=e.target.closest('[data-action]');if(!b)return;const r=rows.find(r=>r.id===b.dataset.id);if(!r)return;({view,edit:editor,delete:remove,swap:convert,related:relatedPage})[b.dataset.action](r,b)};
     }
 
+
+    function generalForm(content,r){
+      if(!d.getElementById('lead-general-style')){
+        const st=d.createElement('style');st.id='lead-general-style';st.textContent=`
+        .lg-hero{display:flex;align-items:center;gap:16px;padding:22px;border:1px solid #dddffd;border-radius:16px;background:linear-gradient(110deg,#f0efff,#f0fbfa);margin-bottom:18px}.lg-hero h2{margin:0 0 6px;font-size:19px}.lg-hero p{margin:0;color:#697c88;font-size:12px}.lg-emblem{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:#4d49ff;color:#fff}
+        .lg-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.lg-card{background:#fff;border:1px solid #dce8ec;border-radius:16px;padding:20px;box-shadow:0 5px 18px #24254006;border-top:3px solid var(--lg-accent,#4d49ff)}.lg-card h3{display:flex;gap:9px;align-items:center;margin:0 0 22px;font-size:14px;color:var(--lg-accent,#4d49ff)}.lg-fields{display:grid;gap:16px}.lg-fields label{display:grid;gap:8px;font-size:12px;color:#4b5466}.lg-fields input:not([type=radio]),.lg-fields select,.lg-fields textarea{width:100%;box-sizing:border-box;min-width:0;font:inherit;padding:11px 12px;border:1px solid #dce3ee;border-radius:9px;background:#fafbfe;color:#242540}.lg-fields input:read-only{background:#f1f4f8;color:#738096}.lg-fields input[type=range]{accent-color:#4d49ff;padding:0}.lg-fields fieldset{border:0;padding:0;margin:0}.lg-fields legend{font-size:12px;margin-bottom:10px}.lg-radios{display:flex;flex-wrap:wrap;gap:8px}.lg-radios label{display:flex;align-items:center;gap:5px;padding:8px;background:#f4f3ff;border-radius:8px}.lg-radios input{accent-color:#4d49ff}.lg-wide{grid-column:1/-1}.lg-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:12px}.lg-sample{display:inline-block;font-size:10px;background:#fff0d8;color:#976315;padding:2px 7px;border-radius:6px;margin-right:7px}.lg-progress{display:flex;justify-content:space-between;color:#4d49ff}.lg-required{color:#d74d70}@media(max-width:1100px){.lg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.lg-grid{grid-template-columns:1fr}.lg-bottom{flex-wrap:wrap}}
+        `;d.head.appendChild(st);
+      }
+      const required=new Set(['organization','owner','source','product','userCount','rialValue','status']);
+      const label=(k,t)=>t+(required.has(k)?' <span class="lg-required">*</span>':'');
+      const input=(k,t,type='text',readOnly=false)=>'<label><span>'+label(k,t)+'</span><input name="'+k+'" type="'+type+'" value="'+esc(k==='created'?dateText(r.created):r[k]??'')+'" '+(required.has(k)?'required ':'')+(readOnly?'readonly ':'')+(['userCount','rialValue'].includes(k)?'min="0" step="1" ':'')+(k==='nationalId'?'inputmode="numeric" pattern="[0-9۰-۹٠-٩]{11}" maxlength="11" ':'maxlength="250" ')+'></label>';
+      const select=(k,t,options)=>'<label><span>'+label(k,t)+'</span><select name="'+k+'" '+(required.has(k)?'required':'')+'><option value="">انتخاب کنید</option>'+[...new Set([r[k],...options].filter(Boolean))].map(v=>'<option value="'+esc(v)+'" '+(r[k]===v?'selected':'')+'>'+esc(v)+'</option>').join('')+'</select></label>';
+      const card=(title,color,ico,body)=>'<section class="lg-card" style="--lg-accent:'+color+'"><h3>'+icon(ico)+title+'</h3><div class="lg-fields">'+body+'</div></section>';
+      content.innerHTML='<div class="lg-hero"><span class="lg-emblem">'+icon('people')+'</span><div><h2>'+esc(r.organization)+'</h2><p>پروندهٔ لید · اطلاعات هویتی، تجاری و پیگیری</p></div></div><form data-general-form><div class="lg-grid">'+
+        card('هویت و مشخصات شرکت','#4d49ff','people',input('organization','نام شرکت')+input('nationalId','شناسه ملی')+select('companyType','نوع شرکت',['خصوصی','دولتی','عمومی','تعاونی'])+input('creator','ایجادکننده','text',true)+input('created','تاریخ ایجاد','text',true))+
+        card('فعالیت و موقعیت','#009c88','target',input('industry','حوزه فعالیت')+input('activityType','نوع فعالیت')+input('province','استان')+input('city','شهر')+select('source','نحوه آشنایی',['ارتباط مستقیم (Cold Call)','معرفی','وب‌سایت','نمایشگاه','شبکه‌های اجتماعی']))+
+        card('محصول و پیگیری','#da8922','trend',select('product','محصول',products)+input('userCount','تعداد کاربر مورد نیاز','number')+input('rialValue','ارزش ریالی','number')+input('owner','مسئول پیگیری')+select('status','وضعیت',[...statuses,'پایلوت','قرارداد','پیگیری عقد قرارداد','برگزاری جلسه دمو','مذاکره اولیه تلفنی']))+
+        '<section class="lg-card lg-wide"><h3>'+icon('clock')+'مسیر همکاری و توضیحات</h3><div class="lg-fields"><fieldset><legend>دسته‌بندی <span class="lg-required">*</span></legend><div class="lg-radios">'+['سرنخ','فرصت','مشتری','همکاری','لغو شده'].map(v=>'<label><input type="radio" name="relationshipStage" value="'+v+'" '+((r.relationshipStage||'سرنخ')===v?'checked':'')+' required>'+v+'</label>').join('')+'</div></fieldset><label><span class="lg-progress"><span>درصد پیشرفت</span><output data-progress>'+fa(r.progress??0)+'٪</output></span><input type="range" name="progress" min="0" max="100" step="0.01" value="'+esc(r.progress??0)+'"></label><label>نکات تکمیلی (حداکثر ۲۰۰۰ حرف)<textarea name="notes" maxlength="2000" rows="4" placeholder="توضیحات و نکات مهم این پرونده…">'+esc(r.notes||'')+'</textarea><small data-notes-count>'+fa((r.notes||'').length)+' / ۲۰۰۰</small></label></div></section></div><div class="lg-bottom"><span role="status" data-general-message>تغییرات پس از ذخیره در همین مرورگر نگهداری می‌شوند.</span><button type="submit" class="leads-button primary">ذخیره اطلاعات کلی</button></div></form>';
+      const form=content.querySelector('form');
+      form.querySelector('[name=progress]').oninput=e=>form.querySelector('[data-progress]').textContent=fa(e.target.value)+'٪';
+      form.querySelector('[name=notes]').oninput=e=>form.querySelector('[data-notes-count]').textContent=fa(e.target.value.length)+' / ۲۰۰۰';
+      form.onsubmit=e=>{
+        e.preventDefault();const next={};
+        ['organization','nationalId','companyType','industry','activityType','province','city','source','product','owner','status','notes'].forEach(k=>next[k]=form.querySelector('[name='+k+']').value.trim());
+        const msg=form.querySelector('[data-general-message]');
+        if([...required].some(k=>!['userCount','rialValue'].includes(k)&&!next[k])){msg.textContent='فیلدهای ستاره‌دار را تکمیل کنید.';return;}
+        for(const k of ['userCount','rialValue']){next[k]=Number(form.querySelector('[name='+k+']').value);if(!Number.isSafeInteger(next[k])||next[k]<0){msg.textContent='تعداد کاربر و ارزش ریالی باید عدد صحیح نامنفی باشند.';return;}}
+        next.progress=Number(form.querySelector('[name=progress]').value);next.relationshipStage=form.querySelector('[name=relationshipStage]:checked').value;
+        if(update(r,next)){relatedPage(r,0);host.querySelector('[data-general-message]').textContent='اطلاعات با موفقیت ذخیره شد.';}else msg.textContent='ذخیره انجام نشد.';
+      };
+    }
+    function demoRelated(r,key){
+      const id=n=>'sample-'+r.id+'-'+key+'-'+n;
+      const names=['کارشناس نمونه الف','کارشناس نمونه ب'];
+      const data={
+        actions:[{id:id(1),title:'هماهنگی جلسه معرفی محصول',owner:names[0],due:today(),status:'در حال پیگیری',notes:'دادهٔ نمونه: ارائه قابلیت‌ها و پاسخ به پرسش‌ها'},{id:id(2),title:'ارسال پیشنهاد اولیه',owner:names[1],due:today(),status:'برنامه‌ریزی‌شده',notes:'دادهٔ نمونه: بررسی تعداد کاربران'}],
+        people:[{id:id(1),name:'شخص نمونه اول',role:'مدیر فناوری اطلاعات',phone:'',email:'contact@example.com'},{id:id(2),name:'شخص نمونه دوم',role:'کارشناس قراردادها',phone:'',email:'contracts@example.com'}],
+        requests:[{id:id(1),title:'درخواست نسخه آزمایشی',date:today(),status:'در حال بررسی',notes:'دادهٔ نمونه: دسترسی آزمایشی برای تیم'},{id:id(2),title:'درخواست آموزش اولیه',date:today(),status:'ثبت‌شده',notes:'دادهٔ نمونه: جلسه آنلاین آشنایی'}],
+        issues:[{id:id(1),title:'نیاز به تأیید بودجه',owner:names[0],status:'باز',notes:'دادهٔ نمونه: منتظر بررسی داخلی'},{id:id(2),title:'ابهام در انتقال اطلاعات',owner:names[1],status:'در حال بررسی',notes:'دادهٔ نمونه: بررسی قالب داده‌های قبلی'}]
+      };
+      return (data[key]||[]).map(x=>({...x,sample:true}));
+    }
+
     function relatedPage(record, selectedTab=0) {
       if(typeof selectedTab!=='number')selectedTab=0;
       const r=rows.find(item=>item.id===record.id);
@@ -218,19 +261,14 @@
       host.querySelector('[data-related-back]').onclick=render;
       host.querySelectorAll('[data-related-tab]').forEach(b=>b.onclick=()=>relatedPage(r,Number(b.dataset.relatedTab)));
       const content=host.querySelector('[data-related-content]');
-      if(selectedTab===0){
-        const fields=categoryOf(r)==='companies'?companyFields:formFields;
-        const pairs=[...fields.map(([k,label])=>[label,k==='due'?dateText(r[k]):r[k]]),['محصول',r.product],['وضعیت',r.status],['تاریخ ثبت',dateText(r.created)]];
-        content.innerHTML='<div class="board-wrap"><table class="admin-table"><thead><tr><th>عنوان</th><th>اطلاعات</th></tr></thead><tbody>'+pairs.map(([label,value])=>'<tr><td>'+label+'</td><td>'+esc(value??'—')+'</td></tr>').join('')+'</tbody></table></div>';
-        return;
-      }
-      const fields=schemas[selectedTab], entries=r.relatedForms?.[key]||[];
+      if(selectedTab===0){generalForm(content,r);return;}
+      const fields=schemas[selectedTab], entries=r.relatedForms?.[key]??demoRelated(r,key);
       function saveEntries(next){return update(r,{relatedForms:{...r.relatedForms,[key]:next}});}
       function editEntry(entry){
         const dialog=modal((entry?'ویرایش':'ثبت')+' — '+tabs[selectedTab],'<form><div class="leads-fields">'+fields.map(([k,label],i)=>'<label>'+label+'<input name="'+k+'" type="'+(['date','due'].includes(k)?'date':k==='email'?'email':'text')+'" value="'+esc(entry?.[k]??'')+'" maxlength="1000" '+(i===0?'required':'')+'></label>').join('')+'</div>'+footer()+'</form>');
-        dialog.querySelector('form').onsubmit=e=>{e.preventDefault();const item={id:entry?.id||crypto.randomUUID()};fields.forEach(([k])=>item[k]=dialog.querySelector('[name='+k+']').value.trim());if(!item[fields[0][0]])return;if(!saveEntries(entry?entries.map(x=>x.id===entry.id?item:x):[...entries,item])){dialog.querySelector('[role=alert]').textContent='ذخیره انجام نشد.';return;}dialog.close();relatedPage(r,selectedTab);};
+        dialog.querySelector('form').onsubmit=e=>{e.preventDefault();const item={...entry,id:entry?.id||crypto.randomUUID()};fields.forEach(([k])=>item[k]=dialog.querySelector('[name='+k+']').value.trim());if(!item[fields[0][0]])return;if(!saveEntries(entry?entries.map(x=>x.id===entry.id?item:x):[...entries,item])){dialog.querySelector('[role=alert]').textContent='ذخیره انجام نشد.';return;}dialog.close();relatedPage(r,selectedTab);};
       }
-      content.innerHTML='<div class="admin-toolbar leads-toolbar" style="justify-content:flex-end"><button class="leads-button primary" data-related-create>＋ ثبت '+tabs[selectedTab]+'</button></div><div class="board-wrap"><table class="admin-table"><thead><tr><th>ردیف</th>'+fields.map(([,label])=>'<th>'+label+'</th>').join('')+'<th>عملیات</th></tr></thead><tbody>'+entries.map((item,i)=>'<tr><td>'+fa(i+1)+'</td>'+fields.map(([k])=>'<td>'+esc(['date','due'].includes(k)?dateText(item[k]):item[k]||'—')+'</td>').join('')+'<td><button class="leads-icon" title="ویرایش" aria-label="ویرایش" data-related-edit="'+esc(item.id)+'">'+icon('edit')+'</button><button class="leads-icon" title="حذف" aria-label="حذف" data-related-delete="'+esc(item.id)+'">'+icon('delete')+'</button></td></tr>').join('')+(entries.length?'':'<tr><td class="admin-empty" colspan="'+(fields.length+2)+'">اطلاعاتی برای نمایش وجود ندارد.</td></tr>')+'</tbody></table></div>';
+      content.innerHTML='<div class="admin-toolbar leads-toolbar" style="justify-content:flex-end"><button class="leads-button primary" data-related-create>＋ ثبت '+tabs[selectedTab]+'</button></div><div class="board-wrap"><table class="admin-table"><thead><tr><th>ردیف</th>'+fields.map(([,label])=>'<th>'+label+'</th>').join('')+'<th>عملیات</th></tr></thead><tbody>'+entries.map((item,i)=>'<tr><td>'+fa(i+1)+(item.sample?'<span class="lg-sample">نمونه</span>':'')+'</td>'+fields.map(([k])=>'<td>'+esc(['date','due'].includes(k)?dateText(item[k]):item[k]||'—')+'</td>').join('')+'<td><button class="leads-icon" title="ویرایش" aria-label="ویرایش" data-related-edit="'+esc(item.id)+'">'+icon('edit')+'</button><button class="leads-icon" title="حذف" aria-label="حذف" data-related-delete="'+esc(item.id)+'">'+icon('delete')+'</button></td></tr>').join('')+(entries.length?'':'<tr><td class="admin-empty" colspan="'+(fields.length+2)+'">اطلاعاتی برای نمایش وجود ندارد.</td></tr>')+'</tbody></table></div>';
       content.querySelector('[data-related-create]').onclick=()=>editEntry();
       content.querySelectorAll('[data-related-edit]').forEach(b=>b.onclick=()=>editEntry(entries.find(x=>x.id===b.dataset.relatedEdit)));
       content.querySelectorAll('[data-related-delete]').forEach(b=>b.onclick=()=>{

@@ -27,6 +27,12 @@ const root = path.join(__dirname, '..');
     await page.locator('[data-action=swap]').first().click();assert.match(await page.locator('dialog').innerText(),/اضافه شود/);await page.locator('dialog [data-close]').click();
     await page.locator('[data-action=related]').first().click();
     assert.deepEqual(await page.locator('[data-related-tab]').allTextContents(),['اطلاعات کلی','اقدامات','اشخاص مرتبط','درخواست‌های مشتری','موانع و مشکلات']);
+    for(const name of ['organization','nationalId','companyType','creator','created','industry','activityType','province','city','source','product','userCount','rialValue','owner','status','relationshipStage','progress','notes'])assert(await page.locator('[data-general-form] [name='+name+']').count(),name);
+    assert.equal(await page.locator('[name=notes]').getAttribute('maxlength'),'2000');
+    await page.locator('[name=userCount]').fill('25');await page.locator('[name=rialValue]').fill('0');await page.locator('[name=notes]').fill('یادداشت تست');await page.locator('[data-general-form] button[type=submit]').click();
+    assert.match(await page.locator('[data-general-message]').innerText(),/موفقیت/);
+    await page.screenshot({path:path.join(root,'..','output','admin-lead-general-preview.png'),fullPage:true});
+    for(const tab of [1,2,3,4]){await page.locator('[data-related-tab="'+tab+'"]').click();assert.equal(await page.locator('tbody tr').count(),2);assert.equal(await page.locator('.lg-sample').count(),2);}
     await page.locator('[data-related-tab="1"]').click();await page.locator('[data-related-create]').click();await page.locator('dialog [name=title]').fill('اقدام آزمایشی');await page.locator('dialog button[type=submit]').click();assert.match(await page.locator('tbody').innerText(),/اقدام آزمایشی/);
     await page.locator('[data-related-back]').click();await page.locator('[data-action=related]').nth(1).click();await page.locator('[data-related-tab="1"]').click();assert(!((await page.locator('tbody').innerText()).includes('اقدام آزمایشی')));
     await page.locator('[data-related-back]').click();await page.locator('[data-action=related]').first().click();await page.locator('[data-related-tab="1"]').click();assert.match(await page.locator('tbody').innerText(),/اقدام آزمایشی/);await page.locator('[data-related-back]').click();
