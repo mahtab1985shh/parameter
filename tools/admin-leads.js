@@ -5,7 +5,7 @@
   const CUSTOMER_KEY = 'parameter.admin.customers.v1';
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fa = n => Number(n).toLocaleString('fa-IR');
-  const today = () => new Date().toISOString().slice(0, 10);
+  const today = () => {const now=new Date();return [now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');};
   const dateText = value => value ? new Date(value + 'T12:00:00Z').toLocaleDateString('fa-IR') : '—';
   const statuses = ['جدید', 'در تماس', 'واجد شرایط', 'تبدیل‌شده', 'رد شده'];
   const scores = ['داغ', 'گرم', 'سرد'];
@@ -47,7 +47,7 @@
   }
   window.parameterAdminLeads = function (d, goCustomers) {
     const host = d.getElementById('admin-content');
-    let rows, activeCategory = 'companies', page = 1;
+    let rows, activeCategory = 'all', activeStage = 'leads', activePeriod = 'all', page = 1;
     const categories = [['companies','شرکت‌ها'],['people','اشخاص'],['members','اعضای سایت'],['free','کاربران رایگان']];
     const categoryOf = r => r.accountType==='free'?'free':(r.category||'companies');
     const selected = new Set(), size = 7;
@@ -55,6 +55,7 @@
     if (!d.getElementById('admin-leads-style')) {
       const style = d.createElement('style'); style.id = 'admin-leads-style';
       style.textContent = `
+        .leads-period{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 16px;color:#697C88;font-size:12px}.leads-period .leads-button{padding:7px 13px}.leads-type-filter{display:flex;align-items:center;gap:10px;color:#697C88;font-size:12px}.leads-type-filter select{font:inherit;padding:9px 12px;min-width:155px;background:#fff;color:#424b60;border:1px solid #DCE8EC;border-radius:8px}
         .leads-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:4px 0 14px}
         .leads-kpi{position:relative;display:grid;gap:10px;padding:20px;background:#fff;border:1px solid #DCE8EC;border-radius:12px;color:#697C88;font-size:12px;min-height:112px;box-sizing:border-box}
         .leads-kpi strong{font-size:25px;color:#4D49FF}.leads-kpi small{font-size:11px}.leads-kpi>i{position:absolute;left:20px;top:35px;display:grid;place-items:center;width:43px;height:43px;border-radius:14px;background:#eef1ff;color:#4D49FF}
@@ -91,8 +92,8 @@
     const footer = (label='ذخیره') => '<p role="alert"></p><footer><button type="button" class="leads-button" data-close>بستن</button><button type="submit" class="leads-button primary">'+label+'</button></footer>';
     const formFields = [['organization','نام سازمان / شرکت'],['industry','حوزه فعالیت'],['contact','نام شخص رابط'],['role','سمت رابط'],['phone','شماره تماس'],['source','منبع / کمپین معرف'],['campaign','کد کمپین'],['owner','کارشناس مسئول'],['nextAction','اقدام بعدی'],['due','تاریخ اقدام بعدی']];
     function editor(record) {
-      const r = record ? {...record,category:categoryOf(record)} : {product:products[0],score:'گرم',status:'جدید',accountType:activeCategory==='free'?'free':'other',category:activeCategory};
-      const fields = r.category==='companies'?companyFields:formFields;
+      const r = record ? {...record,category:categoryOf(record)} : {product:products[0],score:'گرم',status:'جدید',accountType:activeCategory==='free'?'free':'other',category:activeCategory==='all'?'companies':activeCategory};
+      const fields = r.category==='companies'?companyFields:r.category==='people'?peopleFields:formFields;
       const select = (key,label,options) => '<label>'+label+'<select name="'+key+'">'+options.map(([v,n])=>'<option value="'+esc(v)+'" '+(r[key]===v?'selected':'')+'>'+n+'</option>').join('')+'</select></label>';
       const dialog = modal(record?'ویرایش لید':'ثبت لید جدید','<form><div class="leads-fields">'+fields.map(([key,label])=>'<label>'+label+'<input name="'+key+'" type="'+(key==='due'?'date':key==='phone'?'tel':['userCount','rialValue'].includes(key)?'number':'text')+'" maxlength="250" '+(['userCount','rialValue'].includes(key)?'min="0" step="1" ':'')+(key==='organization'?'required':'')+' value="'+esc(r[key]??'')+'"></label>').join('')+select('product',r.category==='companies'?'محصول':'محصول موردعلاقه',products.map(v=>[v,v]))+select('score','امتیاز',scores.map(v=>[v,v]))+select('category','گروه لید',categories)+'</div>'+footer()+'</form>');
       dialog.querySelector('form').onsubmit = e => {
@@ -101,13 +102,13 @@
         for(const key of ['userCount','rialValue']){if(next[key]!==undefined&&next[key]!==''){const n=Number(next[key]);if(!Number.isSafeInteger(n)||n<0){dialog.querySelector('[role=alert]').textContent='تعداد کاربر و ارزش ریالی باید عدد صحیح و نامنفی باشند.';return;}next[key]=n;}}
         ['product','score','category'].forEach(k=>next[k]=dialog.querySelector('[name='+k+']').value);
         next.accountType=next.category==='free'?'free':'other';
-        if (!record) Object.assign(next,{id:crypto.randomUUID(),created:today(),activities:[]});
+        if (!record) Object.assign(next,{id:crypto.randomUUID(),created:today(),activities:[],...(activeStage==='opportunities'?{opportunity:next.organization}:{})});
         if (!persist(record?rows.map(item=>item.id===r.id?next:item):[next,...rows])) { dialog.querySelector('[role=alert]').textContent='ذخیره ناموفق بود.'; return; }
         dialog.close(); render();
       };
     }
     function view(r) {
-      const pairs=[...(categoryOf(r)==='companies'?companyFields:formFields).map(([k,label])=>[label,k==='due'?dateText(r[k]):r[k]]),['محصول',r.product],['وضعیت',r.status],['نوع کاربر',r.accountType==='free'?'کاربر رایگان':'سایر لیدها'],['تاریخ ثبت',dateText(r.created)],['دلیل رد',r.rejection],['فرصت فروش',r.opportunity]];
+      const pairs=[...(categoryOf(r)==='companies'?companyFields:categoryOf(r)==='people'?peopleFields:formFields).map(([k,label])=>[label,k==='due'?dateText(r[k]):r[k]]),['محصول',r.product],['وضعیت',r.status],['نوع کاربر',r.accountType==='free'?'کاربر رایگان':'سایر لیدها'],['تاریخ ثبت',dateText(r.created)],['دلیل رد',r.rejection],['فرصت فروش',r.opportunity]];
       modal('مشاهده لید — '+r.organization,'<dl>'+pairs.map(([label,v])=>'<dt>'+label+'</dt><dd>'+esc(v??'—')+'</dd>').join('')+'</dl><h3>فعالیت‌ها</h3>'+((r.activities||[]).map(a=>'<p>'+esc(a.text)+' <small>'+dateText(a.date)+'</small></p>').join('')||'<p>فعالیتی ثبت نشده است.</p>')+'<footer><button class="leads-button" data-close>بستن</button></footer>');
     }
     function textAction(r,title,key,label) {
@@ -148,8 +149,19 @@
       const dialog=modal('حذف لید','<p>«'+esc(r.organization)+'» حذف شود؟ پروندهٔ مشتریِ تبدیل‌شده حذف نخواهد شد.</p><form>'+footer('حذف')+'</form>');
       dialog.querySelector('form').onsubmit=e=>{e.preventDefault();if(persist(rows.filter(item=>item.id!==r.id))){selected.delete(r.id);dialog.close();render()}else dialog.querySelector('[role=alert]').textContent='حذف ذخیره نشد.';};
     }
+    function inPeriod(r) {
+      if(activePeriod==='all')return true;
+      if(!r.created)return false;
+      const now=new Date(), date=new Date(r.created+'T12:00:00');
+      if(Number.isNaN(date.getTime()))return false;
+      const localDay=x=>[x.getFullYear(),String(x.getMonth()+1).padStart(2,'0'),String(x.getDate()).padStart(2,'0')].join('-');
+      if(activePeriod==='today')return r.created===localDay(now);
+      if(activePeriod==='month')return date.toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'})===now.toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'})&&r.created<=localDay(now);
+      const start=new Date(now);start.setDate(start.getDate()-(start.getDay()+1)%7);
+      return r.created>=localDay(start)&&r.created<=localDay(now);
+    }
     function filtered() {
-      return rows.filter(r=>categoryOf(r)===activeCategory);
+      return rows.filter(r=>(activeCategory==='all'||categoryOf(r)===activeCategory)&&(activeStage==='leads'||Boolean(r.opportunity))&&inPeriod(r));
     }
     function exportRows() {
       const cols=[...formFields,['product','محصول'],['status','وضعیت'],['accountType','نوع کاربر'],['created','تاریخ ثبت']];
@@ -168,28 +180,29 @@
       };
     }
     const companyFields = [['organization','نام شرکت'],['activityType','نوع فعالیت'],['industry','حوزه فعالیت'],['province','استان'],['city','شهر'],['source','نحوه آشنایی'],['owner','مسئول پیگیری'],['userCount','تعداد کاربر'],['rialValue','ارزش ریالی'],['nextAction','اقدام بعدی'],['due','تاریخ پیگیری'],['contact','نام شخص رابط'],['role','سمت رابط'],['phone','شماره تماس']];
+    const peopleFields = [['organization','نام'],['lastName','نام خانوادگی'],['nationalCode','کد ملی'],['phone','موبایل'],...companyFields.filter(([k])=>!['organization','activityType','contact','role','phone'].includes(k))];
     function tableTitles() {
+      if(activeCategory==='people')return ['ردیف','نام','نام خانوادگی','کد ملی','موبایل','حوزه فعالیت','استان','شهر','نحوه آشنایی','مسئول پیگیری','محصول','تعداد کاربر','اقدام بعدی','تاریخ پیگیری','وضعیت','عملیات'];
       return activeCategory==='companies'
-        ? ['ردیف','نام شرکت','نوع فعالیت','حوزه فعالیت','استان','شهر','نحوه آشنایی','مسئول پیگیری','محصول','تعداد کاربر','ارزش ریالی','اقدام بعدی','تاریخ پیگیری','وضعیت','عملیات']
+        ? ['ردیف','نام شرکت','نوع فعالیت','حوزه فعالیت','استان','شهر','نحوه آشنایی','مسئول پیگیری','محصول','تعداد کاربر','اقدام بعدی','تاریخ پیگیری','وضعیت','عملیات']
         : ['ردیف','نام سازمان / شرکت','شخص رابط / تماس','منبع / کمپین معرف','محصول موردعلاقه','امتیاز','وضعیت','کارشناس مسئول','اقدام بعدی','تاریخ ثبت','عملیات'];
     }
     function companyCells(r) {
       const number=v=>v===undefined||v===null||v===''?'—':Number.isFinite(Number(v))?fa(v):esc(v);
-      return '<td class="leads-company"><strong>'+esc(r.organization)+'</strong></td>'+
-        [r.activityType,r.industry,r.province,r.city,r.source].map(v=>'<td>'+esc(v||'—')+'</td>').join('')+
+      return '<td class="leads-company"><strong>'+esc(r.organization)+'</strong></td>'+(activeCategory==='people'?'<td>'+esc(r.lastName||'—')+'</td><td>'+esc(r.nationalCode||'—')+'</td><td>'+esc(r.phone||'—')+'</td>':'<td>'+esc(r.activityType||'—')+'</td>')+
+        [r.industry,r.province,r.city,r.source].map(v=>'<td>'+esc(v||'—')+'</td>').join('')+
         '<td class="leads-owner"><span class="leads-avatar">'+esc((r.owner||'؟').replace('مهندس ','').slice(0,1))+'</span>'+esc(r.owner||'تعیین نشده')+'</td>'+
         '<td><span class="leads-chip leads-product">'+esc(r.product||'—')+'</span></td>'+
-        '<td>'+number(r.userCount)+'</td><td>'+number(r.rialValue)+'</td>'+
+        '<td>'+number(r.userCount)+'</td>'+
         '<td>'+esc(r.nextAction||'—')+'</td><td><span class="'+(r.due&&r.due<today()&&!['تبدیل‌شده','رد شده'].includes(r.status)?'leads-overdue':'')+'">'+dateText(r.due)+'</span></td>'+
         '<td><span class="leads-chip leads-status-'+statuses.indexOf(r.status)+'">● '+esc(r.status)+'</span></td>';
     }
     function paintRows() {
-      host.querySelector('thead tr').innerHTML='<th><input type="checkbox" data-select-all aria-label="انتخاب همه ردیف‌های این صفحه"></th>'+tableTitles().map(t=>'<th>'+t+'</th>').join('');
+      host.querySelector('thead tr').innerHTML='<th><input type="checkbox" data-select-all aria-label="انتخاب همه ردیف‌های این صفحه"></th>'+['نوع',...tableTitles()].map(t=>'<th>'+t+'</th>').join('');
       const matches=filtered(), pages=Math.max(1,Math.ceil(matches.length/size));page=Math.max(1,Math.min(page,pages));
       const shown=matches.slice((page-1)*size,page*size);
       
-      host.querySelectorAll('[data-category]').forEach(b=>{const active=b.dataset.category===activeCategory;b.setAttribute('aria-selected',String(active));b.classList.toggle('active',active)});
-      host.querySelector('tbody').innerHTML=shown.map((r,i)=>'<tr data-row="'+esc(r.id)+'" class="'+(selected.has(r.id)?'is-selected':'')+'"><td><input type="checkbox" data-select="'+esc(r.id)+'" aria-label="انتخاب '+esc(r.organization)+'" '+(selected.has(r.id)?'checked':'')+'></td><td>'+fa((page-1)*size+i+1)+'</td>'+(activeCategory==='companies'?companyCells(r):'<td class="leads-company"><strong>'+esc(r.organization)+'</strong><small>'+esc(r.industry||'—')+'</small></td><td class="leads-contact">'+esc(r.contact||'—')+'<small>'+esc([r.role,r.phone].filter(Boolean).join(' · ')||'—')+'</small></td><td class="leads-source">'+esc(r.source||'—')+'<small>'+esc(r.campaign||'بدون کمپین')+'</small></td><td><span class="leads-chip leads-product">'+esc(r.product)+'</span>'+(r.accountType==='free'?'<small class="leads-free">کاربر رایگان</small>':'')+'</td><td><span class="leads-score leads-score-'+scores.indexOf(r.score)+'">● '+esc(r.score)+'</span></td><td><span class="leads-chip leads-status-'+statuses.indexOf(r.status)+'">● '+esc(r.status)+'</span></td><td class="leads-owner"><span class="leads-avatar">'+esc((r.owner||'؟').replace('مهندس ','').slice(0,1))+'</span>'+esc(r.owner||'تعیین نشده')+'</td><td><span class="'+(r.due&&r.due<today()&&!['تبدیل‌شده','رد شده'].includes(r.status)?'leads-overdue':'')+'">'+dateText(r.due)+'</span><small>'+esc(r.nextAction||'—')+'</small></td><td>'+dateText(r.created)+'</td>')+'<td><div class="leads-actions">'+[['view','مشاهده'],['edit','ویرایش'],['delete','حذف'],['swap','تبدیل به مشتری'],['related','فرم‌های مرتبط']].map(([a,label])=>'<button class="'+(a==='related'?'leads-button related-label':'leads-icon')+'" type="button" data-action="'+a+'" data-id="'+esc(r.id)+'" title="'+label+'" aria-label="'+label+' '+esc(r.organization)+'">'+(a==='related'?'فرم‌های مرتبط':icon(a))+'</button>').join('')+'</div></td></tr>').join('')||'<tr><td colspan="'+(tableTitles().length+1)+'" class="admin-empty">'+('در گروه '+categories.find(c=>c[0]===activeCategory)[1]+' لیدی ثبت نشده است.')+'</td></tr>';
+      host.querySelector('tbody').innerHTML=shown.map((r,i)=>'<tr data-row="'+esc(r.id)+'" class="'+(selected.has(r.id)?'is-selected':'')+'"><td><input type="checkbox" data-select="'+esc(r.id)+'" aria-label="انتخاب '+esc(r.organization)+'" '+(selected.has(r.id)?'checked':'')+'></td><td>'+esc(categories.find(c=>c[0]===categoryOf(r))?.[1]||'—')+'</td><td>'+fa((page-1)*size+i+1)+'</td>'+(['companies','people'].includes(activeCategory)?companyCells(r):'<td class="leads-company"><strong>'+esc(r.organization)+'</strong><small>'+esc(r.industry||'—')+'</small></td><td class="leads-contact">'+esc(r.contact||'—')+'<small>'+esc([r.role,r.phone].filter(Boolean).join(' · ')||'—')+'</small></td><td class="leads-source">'+esc(r.source||'—')+'<small>'+esc(r.campaign||'بدون کمپین')+'</small></td><td><span class="leads-chip leads-product">'+esc(r.product)+'</span>'+(r.accountType==='free'?'<small class="leads-free">کاربر رایگان</small>':'')+'</td><td><span class="leads-score leads-score-'+scores.indexOf(r.score)+'">● '+esc(r.score)+'</span></td><td><span class="leads-chip leads-status-'+statuses.indexOf(r.status)+'">● '+esc(r.status)+'</span></td><td class="leads-owner"><span class="leads-avatar">'+esc((r.owner||'؟').replace('مهندس ','').slice(0,1))+'</span>'+esc(r.owner||'تعیین نشده')+'</td><td><span class="'+(r.due&&r.due<today()&&!['تبدیل‌شده','رد شده'].includes(r.status)?'leads-overdue':'')+'">'+dateText(r.due)+'</span><small>'+esc(r.nextAction||'—')+'</small></td><td>'+dateText(r.created)+'</td>')+'<td><div class="leads-actions">'+[['view','مشاهده'],['edit','ویرایش'],['delete','حذف'],['swap','تبدیل به مشتری'],['related','فرم‌های مرتبط']].map(([a,label])=>'<button class="'+(a==='related'?'leads-button related-label':'leads-icon')+'" type="button" data-action="'+a+'" data-id="'+esc(r.id)+'" title="'+label+'" aria-label="'+label+' '+esc(r.organization)+'">'+(a==='related'?'فرم‌های مرتبط':icon(a))+'</button>').join('')+'</div></td></tr>').join('')||'<tr><td colspan="'+(tableTitles().length+2)+'" class="admin-empty">'+'رکوردی مطابق فیلترهای انتخاب‌شده پیدا نشد.'+'</td></tr>';
       const all=host.querySelector('[data-select-all]');all.checked=shown.length>0&&shown.every(r=>selected.has(r.id));all.indeterminate=shown.some(r=>selected.has(r.id))&&!all.checked;all.disabled=!shown.length;
       host.querySelector('[data-range]').textContent='نمایش '+(matches.length?fa((page-1)*size+1)+'–'+fa(Math.min(page*size,matches.length)):'۰')+' از '+fa(matches.length)+' لید · '+fa(selected.size)+' مورد انتخاب‌شده';
       const pageNumbers=[...new Set([1,page-1,page,page+1,pages])].filter(p=>p>0&&p<=pages).sort((a,b)=>a-b);
@@ -278,13 +291,16 @@
     }
 
     function render() {
-      const month=new Date().toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'}), monthly=rows.filter(r=>new Date(r.created+'T12:00:00Z').toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'})===month).length;
-      const pending=rows.filter(r=>!['تبدیل‌شده','رد شده'].includes(r.status)),due=pending.filter(r=>r.due===today()).length,overdue=pending.filter(r=>r.due&&r.due<today()).length,converted=rows.filter(r=>r.status==='تبدیل‌شده').length;
+      const summaryRows=filtered();
+      const month=new Date().toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'}), monthly=summaryRows.filter(r=>new Date(r.created+'T12:00:00Z').toLocaleDateString('fa-IR',{year:'numeric',month:'numeric'})===month).length;
+      const pending=summaryRows.filter(r=>!['تبدیل‌شده','رد شده'].includes(r.status)),due=pending.filter(r=>r.due===today()).length,overdue=pending.filter(r=>r.due&&r.due<today()).length,converted=summaryRows.filter(r=>r.status==='تبدیل‌شده').length;
       d.querySelector('#page-title').textContent='لیدها';d.querySelector('.breadcrumb').textContent='پنل ادمین / لیدها';
-      host.innerHTML='<div class="leads-kpis">'+[['کل لیدها',fa(rows.length),'تمام لیدهای ثبت‌شده','people'],['لیدهای این ماه',fa(monthly),'بر اساس ماه شمسی جاری','trend'],['پیگیری‌های امروز / معوق',fa(due)+' / '+fa(overdue),fa(overdue)+' پیگیری از موعد گذشته','clock'],['نرخ تبدیل لید به مشتری',fa(rows.length?Math.round(converted/rows.length*100):0)+'٪','نسبت به تمام لیدها','target']].map(([label,n,note,ico])=>'<div class="leads-kpi"><span>'+label+'</span><strong>'+n+'</strong><small>'+note+'</small><i>'+icon(ico)+'</i></div>').join('')+'</div><div class="group-tabs leads-tabs" role="tablist" aria-label="گروه‌های لید">'+categories.map(([key,label])=>'<button type="button" class="group-tab '+(key===activeCategory?'active':'')+'" role="tab" aria-selected="'+(key===activeCategory)+'" data-category="'+key+'"><span class="parameter-tab-icon">'+icon('people')+'</span>'+label+'</button>').join('')+'</div><div class="admin-toolbar leads-toolbar" style="justify-content:flex-end"><button class="leads-button primary" data-create>＋ ثبت لید جدید</button></div><p class="leads-notice" data-notice role="status" aria-live="polite"></p><div class="board-wrap"><table class="admin-table leads-table"><thead><tr><th><input type="checkbox" data-select-all aria-label="انتخاب همه ردیف‌های این صفحه"></th>'+tableTitles().map(t=>'<th>'+t+'</th>').join('')+'</tr></thead><tbody></tbody></table><div class="leads-pagination"><span data-range></span><nav class="leads-pages" data-pages aria-label="صفحه‌بندی لیدها"></nav></div></div><p class="leads-note">داده‌های نمونهٔ طراحی؛ تغییرات فقط در همین مرورگر ذخیره می‌شوند. تب‌ها لیدها را بر اساس گروه پرونده نمایش می‌دهند. با «تبدیل به مشتری»، شرکت و رابط در مشتریان سازمانی ایجاد می‌شوند.</p>';
+      host.innerHTML='<div class="group-tabs leads-tabs" role="tablist" aria-label="لیدها و فرصت‌ها">'+[['leads','سرنخ‌ها','people'],['opportunities','فرصت‌ها','trend']].map(([key,label,ico])=>'<button type="button" class="group-tab '+(key===activeStage?'active':'')+'" role="tab" aria-selected="'+(key===activeStage)+'" data-stage="'+key+'"><span class="parameter-tab-icon">'+icon(ico)+'</span>'+label+'</button>').join('')+'</div><div class="leads-period" role="group" aria-label="فیلتر زمانی"><span>زمان ثبت:</span>'+[['all','همه'],['month','ماه جاری'],['week','هفته جاری'],['today','امروز']].map(([key,label])=>'<button type="button" class="leads-button" aria-pressed="'+(key===activePeriod)+'" data-period="'+key+'">'+label+'</button>').join('')+'</div><div class="leads-kpis">'+[['کل لیدها',fa(summaryRows.length),'مطابق فیلترهای انتخاب‌شده','people'],['لیدهای این ماه',fa(monthly),'بر اساس ماه شمسی جاری','trend'],['پیگیری‌های امروز / معوق',fa(due)+' / '+fa(overdue),fa(overdue)+' پیگیری از موعد گذشته','clock'],['نرخ تبدیل لید به مشتری',fa(summaryRows.length?Math.round(converted/summaryRows.length*100):0)+'٪','نسبت به موارد فیلترشده','target']].map(([label,n,note,ico])=>'<div class="leads-kpi"><span>'+label+'</span><strong>'+n+'</strong><small>'+note+'</small><i>'+icon(ico)+'</i></div>').join('')+'</div><div class="admin-toolbar leads-toolbar" style="justify-content:flex-end"><label class="leads-type-filter">نوع <select data-category-filter aria-label="فیلتر نوع">'+[['all','همه انواع'],...categories].map(([key,label])=>'<option value="'+key+'" '+(key===activeCategory?'selected':'')+'>'+label+'</option>').join('')+'</select></label><span class="leads-spacer"></span><button class="leads-button primary" data-create>＋ '+(activeStage==='opportunities'?'ثبت فرصت جدید':'ثبت سرنخ جدید')+'</button></div><p class="leads-notice" data-notice role="status" aria-live="polite"></p><div class="board-wrap"><table class="admin-table leads-table"><thead><tr><th><input type="checkbox" data-select-all aria-label="انتخاب همه ردیف‌های این صفحه"></th>'+['نوع',...tableTitles()].map(t=>'<th>'+t+'</th>').join('')+'</tr></thead><tbody></tbody></table><div class="leads-pagination"><span data-range></span><nav class="leads-pages" data-pages aria-label="صفحه‌بندی لیدها"></nav></div></div><p class="leads-note">داده‌های نمونهٔ طراحی؛ تغییرات فقط در همین مرورگر ذخیره می‌شوند. فیلتر زمانی بر اساس تاریخ ثبت است؛ هفته از شنبه شروع می‌شود. فرصت‌ها، سرنخ‌های دارای فرصت فروش هستند. با «تبدیل به مشتری»، شرکت و رابط در مشتریان سازمانی ایجاد می‌شوند.</p>';
       host.querySelector('[data-create]').onclick=()=>editor();
 
-      host.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{activeCategory=b.dataset.category;page=1;selected.clear();paintRows()});
+      host.querySelector('[data-category-filter]').onchange=e=>{activeCategory=e.target.value;page=1;selected.clear();render()};
+      host.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{activeStage=b.dataset.stage;page=1;selected.clear();render()});
+      host.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{activePeriod=b.dataset.period;page=1;selected.clear();render()});
       
       paintRows();
     }
