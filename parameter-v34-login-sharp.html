@@ -6119,7 +6119,7 @@ function install(doc){if(!doc||!doc.documentElement||doc.defaultView?.frameEleme
     if(document.getElementById('parameter-admin-login-frame')||document.getElementById('parameter-admin-frame'))return;
     const loginFrame=document.createElement('iframe');
     loginFrame.id='parameter-admin-login-frame';loginFrame.title='ورود به پنل مدیریت ماهان';
-    loginFrame.src='mahan-admin-login.html';
+    loginFrame.src='mahan-login-brand.html?v=20261027-brand';
     loginFrame.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483646;background:#f7f8fc';
     const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
     function closeLogin(){window.removeEventListener('message',receive);loginFrame.remove();document.body.style.overflow=previousOverflow;document.querySelector('.parameter-admin-trigger')?.focus()}
