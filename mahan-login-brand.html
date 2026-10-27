@@ -9,7 +9,7 @@ const adminEntryButton=document.querySelector('#login .submit');
 adminEntryButton.type='button';
 adminEntryButton.addEventListener('click',function(){
   if(window.parent!==window){
-    window.parent.postMessage({type:'parameter-admin-login-complete'},location.origin==='null'?'*':location.origin);
+    if(typeof window.parent.parameterEnterAdminPreview==='function'){window.parent.parameterEnterAdminPreview()}else{window.parent.postMessage({type:'parameter-admin-login-complete'},location.origin==='null'?'*':location.origin);}
   }else{
     window.location.href='parameter-v34-login-sharp.html?preview-admin=1';
   }
