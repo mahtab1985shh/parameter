@@ -2,8 +2,8 @@
 :root{--brand:#4d49ff;--brand-deep:#29265e;--brand-teal:#00c6ae;--brand-yellow:#ffd500;--ink:#242540;--muted:#686b85;--line:#e2e3f0;--tint:#f7f7fe;--canvas:#f7f8fc;--mon-blue:var(--brand);--mon-blue-dark:#3531b8;--mon-blue-tint:var(--tint);--mon-green:var(--brand-teal);--mon-green-tint:#e9f9f5;--bg:var(--canvas);--surface:#fff;--border:var(--line);--text-900:var(--ink);--text-600:var(--muted);--ds-table-head:var(--tint);--ds-border:var(--line)}
 html#parameter-admin-brand body,html#parameter-admin-brand body .main-wrap,html#parameter-admin-brand body .content{background:var(--canvas)!important;color:var(--ink)!important}
 html#parameter-admin-brand body .content{background:radial-gradient(ellipse at 95% 0%,#4d49ff08,transparent 50%),var(--canvas)!important}
-html#parameter-admin-brand body .topbar.parameter-header{background:linear-gradient(to left,#9693e6,#91dece)!important;border:0!important;box-shadow:0 3px 18px #29265e18!important;color:white!important}
-html#parameter-admin-brand body .sidebar{background:linear-gradient(to bottom,#9693e6,#91dece)!important;border:0!important}
+html#parameter-admin-brand body .topbar.parameter-header{background:linear-gradient(to left,#4d49ff,#3430ac 57%,#29265e)!important;border:0!important;box-shadow:0 3px 18px #29265e18!important;color:white!important}
+html#parameter-admin-brand body .sidebar{background:linear-gradient(to bottom,#29265e,#3430ac 57%,#4d49ff)!important;border:0!important}
 html#parameter-admin-brand body .sidebar-nav,html#parameter-admin-brand body .sidebar-footer{background:transparent!important}
 html#parameter-admin-brand body .topbar.parameter-header :is(span,button,strong),html#parameter-admin-brand body #header-parameter-brand,html#parameter-admin-brand body .sidebar-user-name{color:white!important}
 html#parameter-admin-brand body .topbar svg{color:white!important;stroke:currentColor!important}
@@ -95,7 +95,7 @@ html#parameter-admin-brand body :is(.leads-avatar,.lg-emblem){background:#4d49ff
 html#parameter-admin-brand body .leads-product{background:#eaf8f6!important;color:#242540!important}
 @media(max-width:760px){html#parameter-admin-brand body .sidebar{width:76px!important;min-width:76px!important;padding:8px 4px!important}html#parameter-admin-brand body .sidebar-item{flex-direction:column!important;gap:6px!important;padding:8px 2px!important}html#parameter-admin-brand body .sidebar-item span{font-size:9px!important}html#parameter-admin-brand body .content{padding:10px!important}html#parameter-admin-brand body .topbar.parameter-header{min-height:64px!important;border-radius:0!important}}
 
-/* Model 5: pale indigo to mint; dark text remains readable on light surfaces. */
+/* Header and navigation match the supplied indigo login reference. */
 html#parameter-admin-brand body .sidebar,html#parameter-admin-brand body .topbar.parameter-header{border-radius:0!important}
-html#parameter-admin-brand body .topbar.parameter-header :is(span,button,strong),html#parameter-admin-brand body #header-parameter-brand,html#parameter-admin-brand body .sidebar-user-name,html#parameter-admin-brand body .sidebar-item,html#parameter-admin-brand body .sidebar-item.current,html#parameter-admin-brand body #admin-exit{color:#242540!important}
-html#parameter-admin-brand body .sidebar-item.current{background:#ffffff55!important}
+html#parameter-admin-brand body .topbar.parameter-header :is(span,button,strong),html#parameter-admin-brand body #header-parameter-brand,html#parameter-admin-brand body .sidebar-user-name,html#parameter-admin-brand body .sidebar-item,html#parameter-admin-brand body .sidebar-item.current,html#parameter-admin-brand body #admin-exit{color:#ffffff!important}
+html#parameter-admin-brand body .sidebar-item.current{background:#ffffff20!important}
