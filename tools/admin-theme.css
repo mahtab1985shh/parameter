@@ -3,7 +3,7 @@
 html#parameter-admin-brand body,html#parameter-admin-brand body .main-wrap,html#parameter-admin-brand body .content{background:var(--canvas)!important;color:var(--ink)!important}
 html#parameter-admin-brand body .content{background:radial-gradient(ellipse at 95% 0%,#4d49ff08,transparent 50%),var(--canvas)!important}
 html#parameter-admin-brand body .topbar.parameter-header{background:linear-gradient(to left,#4d49ff,#3430ac 57%,#29265e)!important;border:0!important;box-shadow:0 3px 18px #29265e18!important;color:white!important}
-html#parameter-admin-brand body .sidebar{background:linear-gradient(to bottom,#29265e,#3430ac 57%,#4d49ff)!important;border:0!important}
+html#parameter-admin-brand body .sidebar{background:linear-gradient(to bottom,#4d49ff,#3430ac 57%,#29265e)!important;border:0!important}
 html#parameter-admin-brand body .sidebar-nav,html#parameter-admin-brand body .sidebar-footer{background:transparent!important}
 html#parameter-admin-brand body .topbar.parameter-header :is(span,button,strong),html#parameter-admin-brand body #header-parameter-brand,html#parameter-admin-brand body .sidebar-user-name{color:white!important}
 html#parameter-admin-brand body .topbar svg{color:white!important;stroke:currentColor!important}
