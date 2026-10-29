@@ -99,3 +99,19 @@ html#parameter-admin-brand body .leads-product{background:#eaf8f6!important;colo
 html#parameter-admin-brand body .sidebar,html#parameter-admin-brand body .topbar.parameter-header{border-radius:0!important}
 html#parameter-admin-brand body .topbar.parameter-header :is(span,button,strong),html#parameter-admin-brand body #header-parameter-brand,html#parameter-admin-brand body .sidebar-user-name,html#parameter-admin-brand body .sidebar-item,html#parameter-admin-brand body .sidebar-item.current,html#parameter-admin-brand body #admin-exit{color:#ffffff!important}
 html#parameter-admin-brand body .sidebar-item.current{background:#ffffff20!important}
+/* Product landing uses the shared admin surfaces, icons and brand tokens. */
+html#parameter-admin-brand body .admin-products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:24px}
+html#parameter-admin-brand body .admin-product-section{padding:24px;border:1px solid var(--line);border-radius:16px;background:#fff}
+html#parameter-admin-brand body .admin-product-section>header{display:flex;align-items:center;gap:14px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+html#parameter-admin-brand body .admin-product-section h2{margin:0 0 6px;font-size:20px;color:var(--ink)}
+html#parameter-admin-brand body .admin-product-section p{margin:0;color:var(--muted);font-size:12px}
+html#parameter-admin-brand body .admin-product-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}
+html#parameter-admin-brand body .admin-product-card{display:flex;flex-direction:column;align-items:flex-start;gap:14px;min-height:210px;padding:22px;text-align:right;background:#fdfdff;border:1px solid var(--line);border-radius:12px;color:var(--muted);font:inherit;cursor:pointer;transition:background .15s,border-color .15s}
+html#parameter-admin-brand body .admin-product-card:hover{background:var(--tint);border-color:var(--brand)}
+html#parameter-admin-brand body .admin-product-card strong{font-size:18px;color:var(--ink)}
+html#parameter-admin-brand body .admin-product-card>span:not(.parameter-tab-icon){font-size:12px;line-height:1.9}
+html#parameter-admin-brand body .admin-product-card .parameter-tab-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--tint);color:var(--brand)}
+html#parameter-admin-brand body .admin-product-link{margin-top:auto;color:var(--brand);font-weight:700}
+html#parameter-admin-brand body .admin-products-back{margin-top:18px;padding:8px 0}
+@media(max-width:1100px){html#parameter-admin-brand body .admin-products-grid{grid-template-columns:1fr}}
+@media(max-width:540px){html#parameter-admin-brand body .admin-product-cards{grid-template-columns:1fr}html#parameter-admin-brand body .admin-product-section{padding:16px}html#parameter-admin-brand body .admin-product-card{min-height:170px}}
