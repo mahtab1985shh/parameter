@@ -140,3 +140,14 @@ html#parameter-admin-brand body .admin-plan-expired{background:#f0f1f7;color:#68
 @media(max-width:1200px){html#parameter-admin-brand body .admin-plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){html#parameter-admin-brand body .admin-plan-grid{grid-template-columns:1fr}html#parameter-admin-brand body .admin-plans-archive{flex-direction:column;align-items:stretch}html#parameter-admin-brand body .admin-plan-card{padding:18px}}
 html#parameter-admin-brand body .admin-products-back{border:0;background:transparent;box-shadow:none;font:inherit;cursor:pointer}
+/* Compact cards: price appears once; all plan specifications retained. */
+html#parameter-admin-brand body .admin-plan-grid{gap:14px}
+html#parameter-admin-brand body .admin-plan-card{padding:16px;border-radius:12px}
+html#parameter-admin-brand body .admin-plan-card header{gap:8px}
+html#parameter-admin-brand body .admin-plan-card h3{font-size:16px;margin:0;flex:1}
+html#parameter-admin-brand body .admin-plan-price{flex-direction:row;align-items:baseline;flex-wrap:wrap;gap:8px;margin-top:18px;padding-bottom:14px}
+html#parameter-admin-brand body .admin-plan-price strong{font-size:22px}
+html#parameter-admin-brand body .admin-plan-card dl{margin-top:6px}
+html#parameter-admin-brand body .admin-plan-card dl>div{padding:9px 0}
+html#parameter-admin-brand body .admin-plans-heading{margin-bottom:14px}
+html#parameter-admin-brand body .admin-plans-note{margin:4px 0 16px}
